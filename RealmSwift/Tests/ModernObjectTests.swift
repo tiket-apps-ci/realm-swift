@@ -256,4 +256,37 @@ class ModernObjectTests: TestCase {
         XCTAssertTrue(set === obj.setCol)
         XCTAssertTrue(dictionary === obj.mapAny)
     }
+
+    func testFoo() {
+        let queueA = DispatchQueue(label: "queueA", autoreleaseFrequency: .workItem)
+        let queueB = DispatchQueue(label: "queueB", autoreleaseFrequency: .workItem)
+
+        for _ in 0..<1000 {
+            queueA.async {
+                autoreleasepool {
+                    let realm = try! Realm(configuration: .defaultConfiguration, queue: queueA)
+                    let obj = ModernAllTypesObject()
+                    obj.stringCol = "foo"
+                    try! realm.write {
+                        realm.add(obj)
+                    }
+                }
+
+            }
+
+            queueB.async {
+                autoreleasepool {
+                    let realm = try! Realm(configuration: .defaultConfiguration, queue: queueB)
+                    let obj = ModernAllTypesObject()
+                    obj.stringCol = "bar"
+                    try! realm.write {
+                        realm.add(obj)
+                    }
+                }
+
+            }
+            let realm = try! Realm(configuration: .defaultConfiguration)
+            _ = realm.objects(ModernAllTypesObject.self).map { $0.stringCol }
+        }
+    }
 }
