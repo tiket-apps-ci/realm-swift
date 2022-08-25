@@ -257,7 +257,7 @@ class ModernObjectTests: TestCase {
         XCTAssertTrue(dictionary === obj.mapAny)
     }
 
-    func testFoo() {
+    func testClosedRealmIssue() {
         let queueA = DispatchQueue(label: "queueA", autoreleaseFrequency: .workItem)
         let queueB = DispatchQueue(label: "queueB", autoreleaseFrequency: .workItem)
 
@@ -271,7 +271,6 @@ class ModernObjectTests: TestCase {
                         realm.add(obj)
                     }
                 }
-
             }
 
             queueB.async {
@@ -284,6 +283,33 @@ class ModernObjectTests: TestCase {
                     }
                 }
 
+            }
+            let realm = try! Realm(configuration: .defaultConfiguration)
+            _ = realm.objects(ModernAllTypesObject.self).map { $0.stringCol }
+        }
+    }
+
+    func testCoordinatorIssue() {
+        let queueA = DispatchQueue(label: "queueA")
+        let queueB = DispatchQueue(label: "queueB")
+
+        for _ in 0..<1000 {
+            queueA.async {
+                let realm = try! Realm(configuration: .defaultConfiguration, queue: queueA)
+                let obj = ModernAllTypesObject()
+                obj.stringCol = "foo"
+                try! realm.write {
+                    realm.add(obj)
+                }
+            }
+
+            queueB.async {
+                let realm = try! Realm(configuration: .defaultConfiguration, queue: queueB)
+                let obj = ModernAllTypesObject()
+                obj.stringCol = "bar"
+                try! realm.write {
+                    realm.add(obj)
+                }
             }
             let realm = try! Realm(configuration: .defaultConfiguration)
             _ = realm.objects(ModernAllTypesObject.self).map { $0.stringCol }
