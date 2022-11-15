@@ -232,13 +232,16 @@ private final class ObservableStoragePublisher<ObjectType>: Publisher where Obje
 
 @available(iOS 13.0, macOS 10.15, tvOS 13.0, watchOS 6.0, *)
 private class ObservableStorage<ObservedType>: ObservableObject where ObservedType: RealmSubscribable & ThreadConfined & Equatable {
+    var setupHasRun = false
     @Published var value: ObservedType {
         willSet {
             if newValue != value {
-                objectWillChange.subscribers.forEach {
-                    $0.receive(subscription: ObservationSubscription(token: newValue._observe(keyPaths, $0)))
+                if setupHasRun {
+                    objectWillChange.subscribers.forEach {
+                        $0.receive(subscription: ObservationSubscription(token: newValue._observe(keyPaths, $0)))
+                    }
+                    objectWillChange.send()
                 }
-                objectWillChange.send()
             }
         }
     }
@@ -422,7 +425,6 @@ extension Projection: _ObservedResultsValue { }
 @propertyWrapper public struct ObservedResults<ResultType>: DynamicProperty, BoundCollection where ResultType: _ObservedResultsValue & RealmFetchable & KeypathSortable & Identifiable {
     public typealias Element = ResultType
     private class Storage: ObservableStorage<Results<ResultType>> {
-        var setupHasRun = false
         private func didSet() {
             if setupHasRun {
                 setupValue()
@@ -628,7 +630,6 @@ extension Projection: _ObservedResultsValue { }
     public typealias Element = ResultType
 
     private class Storage: ObservableStorage<SectionedResults<Key, ResultType>> {
-        var setupHasRun = false
         private func didSet() {
             if setupHasRun {
                 setupValue()
