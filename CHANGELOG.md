@@ -1,11 +1,30 @@
 x.y.z Release notes (yyyy-MM-dd)
 =============================================================
 ### Enhancements
-* None.
+* Flexible sync subscription state will change to `SyncSubscriptionState.pending` (`RLMSyncSubscriptionStatePending`) while waiting for the server to have sent all pending history after a bootstrap and before marking a subscription as Complete.  ([#5795](https://github.com/realm/realm-core/pull/5795))
+* Add custom column names API, which allows to set a different column name in the realm 
+  from the one used in your object declaration.
+  ```swift
+  class Person: Object {
+      @Persisted var firstName: String
+      @Persisted var birthDate: Date
+      @Persisted var age: Int
+      
+      override class public func propertiesMapping() -> [String : String] {
+          ["firstName"; "first_name",
+           "birthDate"; "birth_date"]
+      }
+  }
+  ```
+  This is very helpful in cases where you want to name a property differently 
+  from your `Device Sync` JSON schema.
+  This API is only available for old and modern object declaration syntax on the
+  `RealmSwift` SDK.
 
 ### Fixed
-* <How to hit and notice issue? what was the impact?> ([#????](https://github.com/realm/realm-swift/issues/????), since v?.?.?)
-* None.
+* Fix a race condition which could result in "operation cancelled" errors being delivered to async open callbacks rather than the actual sync error which caused things to fail ([PR #5968](https://github.com/realm/realm-core/pull/5968), since the introduction of async open).
+* Bootstraps will not be applied in a single write transaction - they will be applied 1MB of changesets at a time, or as configured by the SDK ([#5999](https://github.com/realm/realm-core/pull/5999), since v10.27.0).
+* Fix database corruption and encryption issues on apple platforms, reported in several bugs listed in the PR. ([PR #5993](https://github.com/realm/realm-core/pull/5993), since v10.21.1)
 
 <!-- ### Breaking Changes - ONLY INCLUDE FOR NEW MAJOR version -->
 
@@ -17,7 +36,7 @@ x.y.z Release notes (yyyy-MM-dd)
 * Xcode: 13.1-14.1.
 
 ### Internal
-* Upgraded realm-core from ? to ?
+* Upgraded realm-core from 12.11.0 to 12.12.0
 
 10.32.3 Release notes (2022-11-10)
 =============================================================
@@ -238,6 +257,10 @@ The prebuilt binary for Carthage is now build with Xcode 14.0.1.
 * `RLMUpdateResult.objectId` has been deprecated in favor of
   `RLMUpdateResult.documentId` to support reporting document ids which are not
   object ids.
+### Breaking Changes
+* Private API `_realmColumnNames` has been renamed to a new public API
+  called `propertiesMapping()`. This change only affects the Swift API 
+  and doesn't have any effects in the obj-c API.
 
 ### Compatibility
 
