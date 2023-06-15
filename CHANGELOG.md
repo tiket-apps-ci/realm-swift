@@ -8,8 +8,12 @@ x.y.z Release notes (yyyy-MM-dd)
   ([#8164](https://github.com/realm/realm-swift/issues/8164), since 10.37.0)
 * Disable setting a custom logger by default on the sync client when the sync manager is created.
   This was overriding the default logger set using `RLMLogger.defaultLogger`. (since v10.39.0).
+* Removed warnings for deprecated APIs internal use. 
+  ([#8251](https://github.com/realm/realm-swift/issues/8251), since v10.39.0)
 
-<!-- ### Breaking Changes - ONLY INCLUDE FOR NEW MAJOR version -->
+### Breaking Changes
+* Replacing `RLMSyncLogLevel`/`SyncLogLevel` in favor of `RLMLogLevel`/`LogLevel`,
+  which is now used broadly everywhere we set/use a logger.
 
 ### Compatibility
 * Realm Studio: 14.0.1 or later.

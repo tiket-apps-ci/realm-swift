@@ -16,7 +16,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////
 
-#import "RLMLogger_Private.h"
+#import "RLMLogger_Private.hpp"
 
 #import "RLMUtil.hpp"
 
@@ -28,8 +28,7 @@ using namespace realm;
 using Logger = realm::util::Logger;
 using Level = Logger::Level;
 
-namespace {
-static Level levelForLogLevel(RLMLogLevel logLevel) {
+Level RLMLevelForLogLevel(RLMLogLevel logLevel) {
     switch (logLevel) {
         case RLMLogLevelOff:    return Level::off;
         case RLMLogLevelFatal:  return Level::fatal;
@@ -44,7 +43,7 @@ static Level levelForLogLevel(RLMLogLevel logLevel) {
     REALM_UNREACHABLE();    // Unrecognized log level.
 }
 
-static RLMLogLevel logLevelForLevel(Level logLevel) {
+RLMLogLevel RLMLogLevelForLevel(Level logLevel) {
     switch (logLevel) {
         case Level::off:    return RLMLogLevelOff;
         case Level::fatal:  return RLMLogLevelFatal;
@@ -59,6 +58,7 @@ static RLMLogLevel logLevelForLevel(Level logLevel) {
     REALM_UNREACHABLE();    // Unrecognized log level.
 }
 
+namespace {
 static NSString* levelPrefix(Level logLevel) {
     switch (logLevel) {
         case Level::off:
@@ -86,7 +86,7 @@ public:
     void do_log(Level level, const std::string& message) override {
         @autoreleasepool {
             if (function) {
-                function(logLevelForLevel(level), RLMStringDataToNSString(message));
+                function(RLMLogLevelForLevel(level), RLMStringDataToNSString(message));
             }
         }
     }
@@ -100,11 +100,11 @@ public:
 typedef void(^LoggerBlock)(RLMLogLevel level, NSString *message);
 
 - (RLMLogLevel)level {
-    return logLevelForLevel(_logger->get_level_threshold());
+    return RLMLogLevelForLevel(_logger->get_level_threshold());
 }
 
 - (void)setLevel:(RLMLogLevel)level {
-    _logger->set_level_threshold(levelForLogLevel(level));
+    _logger->set_level_threshold(RLMLevelForLogLevel(level));
 }
 
 + (void)initialize {
@@ -123,7 +123,7 @@ typedef void(^LoggerBlock)(RLMLogLevel level, NSString *message);
 - (instancetype)initWithLevel:(RLMLogLevel)level logFunction:(RLMLogFunction)logFunction {
     if (self = [super init]) {
         auto logger = std::make_shared<CustomLogger>();
-        logger->set_level_threshold(levelForLogLevel(level));
+        logger->set_level_threshold(RLMLevelForLogLevel(level));
         logger->function = logFunction;
         self->_logger = logger;
     }
@@ -131,7 +131,7 @@ typedef void(^LoggerBlock)(RLMLogLevel level, NSString *message);
 }
 
 - (void)logWithLevel:(RLMLogLevel)logLevel message:(NSString *)message, ... {
-    auto level = levelForLogLevel(logLevel);
+    auto level = RLMLevelForLogLevel(logLevel);
     if (_logger->would_log(level)) {
         va_list args;
         va_start(args, message);
@@ -141,7 +141,7 @@ typedef void(^LoggerBlock)(RLMLogLevel level, NSString *message);
 }
 
 - (void)logLevel:(RLMLogLevel)logLevel message:(NSString *)message {
-    auto level = levelForLogLevel(logLevel);
+    auto level = RLMLevelForLogLevel(logLevel);
     if (_logger->would_log(level)) {
         _logger->log(level, "%1", message.UTF8String);
     }

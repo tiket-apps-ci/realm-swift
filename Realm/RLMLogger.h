@@ -20,7 +20,7 @@
 
 RLM_HEADER_AUDIT_BEGIN(nullability)
 
-/// An enum representing different levels of sync-related logging that can be configured.
+/// An enum representing different levels of logging that can be configured.
 typedef RLM_CLOSED_ENUM(NSUInteger, RLMLogLevel) {
     /// Nothing will ever be logged.
     RLMLogLevelOff,
@@ -30,9 +30,9 @@ typedef RLM_CLOSED_ENUM(NSUInteger, RLMLogLevel) {
     RLMLogLevelError,
     /// Warnings and errors will be logged.
     RLMLogLevelWarn,
-    /// Information about sync events will be logged. Fewer events will be logged in order to avoid overhead.
+    /// Information about events will be logged. Fewer events will be logged in order to avoid overhead.
     RLMLogLevelInfo,
-    /// Information about sync events will be logged. More events will be logged than with `RLMLogLevelInfo`.
+    /// Information about events will be logged. More events will be logged than with `RLMLogLevelInfo`.
     RLMLogLevelDetail,
     /// Log information that can aid in debugging.
     ///

@@ -17,6 +17,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #import <Realm/RLMConstants.h>
+#import <Realm/RLMLogger.h>
 
 #ifdef __cplusplus
 #include <memory>
@@ -29,7 +30,6 @@ struct AuditConfig;
 RLM_HEADER_AUDIT_BEGIN(nullability, sendability)
 
 @class RLMRealm, RLMUser, RLMRealmConfiguration;
-typedef RLM_CLOSED_ENUM(NSUInteger, RLMSyncLogLevel);
 
 struct RLMEventContext;
 typedef void (^RLMEventCompletion)(NSError *_Nullable);
@@ -50,10 +50,7 @@ FOUNDATION_EXTERN void RLMEventUpdateMetadata(struct RLMEventContext *context,
 @property (nonatomic) NSString *partitionPrefix;
 @property (nonatomic, nullable) RLMUser *syncUser;
 @property (nonatomic, nullable) NSDictionary<NSString *, NSString *> *metadata;
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-@property (nonatomic, nullable) void (^logger)(RLMSyncLogLevel, NSString *);
-#pragma clang diagnostic pop
+@property (nonatomic, nullable) void (^logger)(RLMLogLevel, NSString *);
 @property (nonatomic, nullable) RLM_SWIFT_SENDABLE void (^errorHandler)(NSError *);
 
 #ifdef __cplusplus

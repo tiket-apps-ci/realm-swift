@@ -17,50 +17,12 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #import <Realm/RLMConstants.h>
+#import <Realm/RLMLogger.h>
 
 @class RLMSyncSession, RLMSyncTimeoutOptions, RLMAppConfiguration;
+typedef RLM_CLOSED_ENUM(NSUInteger, RLMLogLevel);
 
 RLM_HEADER_AUDIT_BEGIN(nullability, sendability)
-
-// NEXT-MAJOR: This enum needs to be removed when access to the logger is removed
-// from the sync manager. 
-/// An enum representing different levels of sync-related logging that can be configured.
-typedef RLM_CLOSED_ENUM(NSUInteger, RLMSyncLogLevel) {
-    /// Nothing will ever be logged.
-    RLMSyncLogLevelOff,
-    /// Only fatal errors will be logged.
-    RLMSyncLogLevelFatal,
-    /// Only errors will be logged.
-    RLMSyncLogLevelError,
-    /// Warnings and errors will be logged.
-    RLMSyncLogLevelWarn,
-    /// Information about sync events will be logged. Fewer events will be logged in order to avoid overhead.
-    RLMSyncLogLevelInfo,
-    /// Information about sync events will be logged. More events will be logged than with `RLMSyncLogLevelInfo`.
-    RLMSyncLogLevelDetail,
-    /// Log information that can aid in debugging.
-    ///
-    /// - warning: Will incur a measurable performance impact.
-    RLMSyncLogLevelDebug,
-    /// Log information that can aid in debugging. More events will be logged than with `RLMSyncLogLevelDebug`.
-    ///
-    /// - warning: Will incur a measurable performance impact.
-    RLMSyncLogLevelTrace,
-    /// Log information that can aid in debugging. More events will be logged than with `RLMSyncLogLevelTrace`.
-    ///
-    /// - warning: Will incur a measurable performance impact.
-    RLMSyncLogLevelAll
-} __attribute__((deprecated("Use `RLMLogLevel`/`LogLevel` instead")));
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-/// A log callback function which can be set on RLMSyncManager.
-///
-/// The log function may be called from multiple threads simultaneously, and is
-/// responsible for performing its own synchronization if any is required.
-RLM_SWIFT_SENDABLE // invoked on a background thread
-typedef void (^RLMSyncLogFunction)(RLMSyncLogLevel level, NSString *message);
-#pragma clang diagnostic pop
 
 /// A block type representing a block which can be used to report a sync-related error to the application. If the error
 /// pertains to a specific session, that session will also be passed into the block.
@@ -103,7 +65,7 @@ __attribute__((deprecated("This property is not used for anything")));
 
 /**
  The logging threshold which newly opened synced Realms will use. Defaults to
- `RLMSyncLogLevelInfo`.
+ `RLMLogLevelInfo`.
 
  By default logging strings are output to Apple System Logger. Set `logger` to
  perform custom logging logic instead.
@@ -111,7 +73,7 @@ __attribute__((deprecated("This property is not used for anything")));
  @warning This property must be set before any synced Realms are opened. Setting it after
           opening any synced Realm will do nothing.
  */
-@property (atomic) RLMSyncLogLevel logLevel
+@property (atomic) RLMLogLevel logLevel
 __attribute__((deprecated("Use `RLMLogger.default.level`/`Logger.shared.level` to set/get the default logger threshold level.")));
 
 /**
@@ -122,7 +84,7 @@ __attribute__((deprecated("Use `RLMLogger.default.level`/`Logger.shared.level` t
  @warning This property must be set before any synced Realms are opened. Setting
           it after opening any synced Realm will do nothing.
  */
-@property (atomic, nullable) RLMSyncLogFunction logger
+@property (atomic, nullable) RLMLogFunction logger
 __attribute__((deprecated("Use `RLMLogger.default`/`Logger.shared` to set/get the default logger.")));
 
 /**

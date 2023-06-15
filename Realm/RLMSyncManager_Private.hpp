@@ -50,6 +50,6 @@ RLM_HEADER_AUDIT_BEGIN(nullability, sendability)
 - (void)populateConfig:(realm::SyncConfig&)config;
 @end
 
-std::shared_ptr<realm::util::Logger> RLMWrapLogFunction(RLMSyncLogFunction);
+std::shared_ptr<realm::util::Logger> RLMWrapLogFunction(RLMLogFunction);
 
 RLM_HEADER_AUDIT_END(nullability, sendability)

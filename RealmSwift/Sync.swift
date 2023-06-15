@@ -219,14 +219,6 @@ extension AppError {
 }
 
 /**
- An enum which can be used to specify the level of logging.
-
- - see: `RLMSyncLogLevel`
- */
-@available(*, deprecated)
-public typealias SyncLogLevel = RLMSyncLogLevel
-
-/**
  A data type whose values represent different authentication providers that can be used with
  Atlas App Services.
 

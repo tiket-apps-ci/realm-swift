@@ -260,7 +260,7 @@ extension Realm {
 
     /// A logger callback function. This function should be thread-safe as it
     /// may be called from multiple threads simultaneously.
-    public typealias LoggerFunction = @Sendable (SyncLogLevel, String) -> Void
+    public typealias LoggerFunction = @Sendable (LogLevel, String) -> Void
     /// A logger which will be called to report information about the work done
     /// on the background event thread. If `nil`, this is instead reported to
     /// the ``SyncManager``'s logger.

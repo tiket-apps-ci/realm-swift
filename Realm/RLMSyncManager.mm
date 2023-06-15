@@ -19,6 +19,7 @@
 #import "RLMSyncManager_Private.hpp"
 
 #import "RLMApp_Private.hpp"
+#import "RLMLogger_Private.hpp"
 #import "RLMSyncSession_Private.hpp"
 #import "RLMUser_Private.hpp"
 #import "RLMSyncUtil_Private.hpp"
@@ -35,46 +36,12 @@
 #include <os/lock.h>
 
 using namespace realm;
-
-// NEXT-MAJOR: All the code associated to the logger from sync manager should be removed.
-using Level = realm::util::Logger::Level;
-
-namespace {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-Level levelForSyncLogLevel(RLMSyncLogLevel logLevel) {
-    switch (logLevel) {
-        case RLMSyncLogLevelOff:    return Level::off;
-        case RLMSyncLogLevelFatal:  return Level::fatal;
-        case RLMSyncLogLevelError:  return Level::error;
-        case RLMSyncLogLevelWarn:   return Level::warn;
-        case RLMSyncLogLevelInfo:   return Level::info;
-        case RLMSyncLogLevelDetail: return Level::detail;
-        case RLMSyncLogLevelDebug:  return Level::debug;
-        case RLMSyncLogLevelTrace:  return Level::trace;
-        case RLMSyncLogLevelAll:    return Level::all;
-    }
-    REALM_UNREACHABLE();    // Unrecognized log level.
-}
-
-RLMSyncLogLevel logLevelForLevel(Level logLevel) {
-    switch (logLevel) {
-        case Level::off:    return RLMSyncLogLevelOff;
-        case Level::fatal:  return RLMSyncLogLevelFatal;
-        case Level::error:  return RLMSyncLogLevelError;
-        case Level::warn:   return RLMSyncLogLevelWarn;
-        case Level::info:   return RLMSyncLogLevelInfo;
-        case Level::detail: return RLMSyncLogLevelDetail;
-        case Level::debug:  return RLMSyncLogLevelDebug;
-        case Level::trace:  return RLMSyncLogLevelTrace;
-        case Level::all:    return RLMSyncLogLevelAll;
-    }
-    REALM_UNREACHABLE();    // Unrecognized log level.
-}
-#pragma clang diagnostic pop
+using Logger = realm::util::Logger;
+using Level = Logger::Level;
 
 #pragma mark - Loggers
 
+namespace {
 struct CocoaSyncLogger : public realm::util::Logger {
     void do_log(Level, const std::string& message) override {
         NSLog(@"Sync: %@", RLMStringDataToNSString(message));
@@ -88,17 +55,17 @@ static std::unique_ptr<realm::util::Logger> defaultSyncLogger(realm::util::Logge
 }
 
 struct CallbackLogger : public realm::util::Logger {
-    RLMSyncLogFunction logFn;
+    RLMLogFunction logFn;
     void do_log(Level level, const std::string& message) override {
         @autoreleasepool {
-            logFn(logLevelForLevel(level), RLMStringDataToNSString(message));
+            logFn(RLMLogLevelForLevel(level), RLMStringDataToNSString(message));
         }
     }
 };
 
 } // anonymous namespace
 
-std::shared_ptr<realm::util::Logger> RLMWrapLogFunction(RLMSyncLogFunction fn) {
+std::shared_ptr<realm::util::Logger> RLMWrapLogFunction(RLMLogFunction fn) {
     auto logger = std::make_shared<CallbackLogger>();
     logger->logFn = fn;
     logger->set_level_threshold(Level::all);
@@ -118,7 +85,7 @@ std::shared_ptr<realm::util::Logger> RLMWrapLogFunction(RLMSyncLogFunction fn) {
     RLMUnfairMutex _mutex;
     std::shared_ptr<SyncManager> _syncManager;
     NSDictionary<NSString *,NSString *> *_customRequestHeaders;
-    RLMSyncLogFunction _logger;
+    RLMLogFunction _logger;
 }
 
 - (instancetype)initWithSyncManager:(std::shared_ptr<realm::SyncManager>)syncManager {
@@ -178,12 +145,12 @@ std::shared_ptr<realm::util::Logger> RLMWrapLogFunction(RLMSyncLogFunction fn) {
     }
 }
 
-- (RLMSyncLogFunction)logger {
+- (RLMLogFunction)logger {
     std::lock_guard lock(_mutex);
     return _logger;
 }
 
-- (void)setLogger:(RLMSyncLogFunction)logFn {
+- (void)setLogger:(RLMLogFunction)logFn {
     {
         std::lock_guard lock(_mutex);
         _logger = logFn;
@@ -219,12 +186,12 @@ std::shared_ptr<realm::util::Logger> RLMWrapLogFunction(RLMSyncLogFunction fn) {
     _syncManager->set_timeouts(timeoutOptions->_options);
 }
 
-- (RLMSyncLogLevel)logLevel {
-    return logLevelForLevel(_syncManager->log_level());
+- (RLMLogLevel)logLevel {
+    return RLMLogLevelForLevel(_syncManager->log_level());
 }
 
-- (void)setLogLevel:(RLMSyncLogLevel)logLevel {
-    _syncManager->set_log_level(levelForSyncLogLevel(logLevel));
+- (void)setLogLevel:(RLMLogLevel)logLevel {
+    _syncManager->set_log_level(RLMLevelForLogLevel(logLevel));
 }
 
 #pragma mark - Private API
