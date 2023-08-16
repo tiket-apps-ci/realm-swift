@@ -919,7 +919,7 @@ public extension SyncSession {
         return __addProgressNotification(for: (direction == .upload ? .upload : .download),
                                          mode: (mode == .reportIndefinitely
                                             ? .reportIndefinitely
-                                            : .forCurrentlyOutstandingWork)) { transferred, transferrable in
+                                            : .forCurrentlyOutstandingWork)) { transferred, transferrable, _ in
                                                 block(Progress(transferred: transferred, transferrable: transferrable))
         }
     }

@@ -34,8 +34,9 @@
 #import "RLMUUID_Private.hpp"
 #import "RLMUtil.hpp"
 
-#import <realm/object-store/results.hpp>
+#import <realm/object-store/object.hpp>
 #import <realm/object-store/property.hpp>
+#import <realm/object-store/results.hpp>
 
 #import <objc/runtime.h>
 #import <objc/message.h>
@@ -128,7 +129,10 @@ void setValueOrNull(__unsafe_unretained RLMObjectBase *const obj, ColKey col,
     RLMTranslateError([&] {
         if (value) {
             if constexpr (std::is_same_v<T, realm::Mixed>) {
-                obj->_row.set(col, RLMObjcToMixed(value, obj->_realm, realm::CreatePolicy::SetLink));
+                realm::Object o(obj->_realm->_realm, *obj->_info->objectSchema, obj->_row);
+                RLMAccessorContext ctx(obj);
+                RLMProperty *property = obj->_info->propertyForTableColumn(col);
+                o.set_property_value(ctx, getProperty(obj, property).name, value ?: NSNull.null);
             }
             else {
                 RLMStatelessAccessorContext ctx;
@@ -379,6 +383,9 @@ id managedGetter(RLMProperty *prop, const char *type) {
             };
         case RLMPropertyTypeUUID:
             return makeWrapperGetter<realm::UUID>(index, prop.optional);
+        case RLMPropertyTypeDictionary:
+        case RLMPropertyTypeList:
+            REALM_UNREACHABLE();
     }
 }
 
@@ -454,6 +461,9 @@ id managedSetter(RLMProperty *prop, const char *type) {
         case RLMPropertyTypeObjectId:       return makeSetter<RLMObjectId *>(prop);
         case RLMPropertyTypeDecimal128:     return makeSetter<RLMDecimal128 *>(prop);
         case RLMPropertyTypeUUID:           return makeSetter<NSUUID *>(prop);
+        case RLMPropertyTypeDictionary:
+        case RLMPropertyTypeList:
+            REALM_UNREACHABLE();
     }
 }
 
@@ -824,8 +834,22 @@ RLMAccessorContext::RLMAccessorContext(RLMAccessorContext& parent, realm::Obj co
 {
 }
 
+RLMAccessorContext::RLMAccessorContext(realm::Obj const& obj, RLMClassInfo& info)
+: _realm(info.realm)
+, _info(info)
+, _parentObject(obj)
+{
+}
+
 RLMAccessorContext::RLMAccessorContext(RLMClassInfo& info)
 : _realm(info.realm), _info(info)
+{
+}
+
+RLMAccessorContext::RLMAccessorContext(RLMClassInfo& parentInfo, RLMClassInfo& info)
+: _realm(info.realm)
+, _info(info)
+, _parentObjectInfo(&parentInfo)
 {
 }
 
@@ -890,15 +914,17 @@ realm::Obj RLMAccessorContext::create_embedded_object() {
 }
 
 id RLMAccessorContext::box(realm::Mixed v) {
-    return RLMMixedToObjc(v, _realm, &_info);
+    auto property = (currentProperty) ? currentProperty : _info.propertyForTableColumn(_colKey);
+    return RLMMixedToObjc(v, _realm, &_info, property, _parentObject);
 }
 
 id RLMAccessorContext::box(realm::List&& l) {
     REALM_ASSERT(_parentObjectInfo);
-    REALM_ASSERT(currentProperty);
+    auto property = currentProperty ? currentProperty : _info.propertyForTableColumn(_colKey);
+    REALM_ASSERT(property);
     return [[RLMManagedArray alloc] initWithBackingCollection:std::move(l)
                                                    parentInfo:_parentObjectInfo
-                                                     property:currentProperty];
+                                                     property:property];
 }
 
 id RLMAccessorContext::box(realm::object_store::Set&& s) {
@@ -911,10 +937,11 @@ id RLMAccessorContext::box(realm::object_store::Set&& s) {
 
 id RLMAccessorContext::box(realm::object_store::Dictionary&& d) {
     REALM_ASSERT(_parentObjectInfo);
-    REALM_ASSERT(currentProperty);
+    auto property = currentProperty ? currentProperty : _info.propertyForTableColumn(_colKey);
+    REALM_ASSERT(property);
     return [[RLMManagedDictionary alloc] initWithBackingCollection:std::move(d)
                                                         parentInfo:_parentObjectInfo
-                                                          property:currentProperty];
+                                                          property:property];
 }
 
 id RLMAccessorContext::box(realm::Object&& o) {
@@ -1100,7 +1127,7 @@ RLMAccessorContext::createObject(id value, realm::CreatePolicy policy,
 
     try {
         realm::Object::create(*this, _realm->_realm, *_info.objectSchema,
-                              (id)value, policy, existingKey, outObj);
+                              realm::util::any_cast<id>(value), policy, existingKey, outObj);
     }
     catch (std::exception const& e) {
         @throw RLMException(e);

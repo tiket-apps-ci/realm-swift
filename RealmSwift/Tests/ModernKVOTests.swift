@@ -367,6 +367,21 @@ class ModernKVOTests: TestCase {
         }
     }
 
+    func testCollectionInMixedKVO() {
+        let (obj, obs) = getObject(ModernAllTypesObject())
+
+        observeSetChange(obs, "otherAnyCol") { obj.anyCol = AnyRealmValue.fromDictionary([
+            "key1": .int(1234)]) }
+        observeSetChange(obs, "otherAnyCol") { obj.anyCol.dictionaryValue?["key1"] = .string("hello") }
+        observeSetChange(obs, "otherAnyCol") { obj.anyCol.dictionaryValue?["key1"] = nil }
+
+        observeSetChange(obs, "otherAnyCol") { obj.anyCol = AnyRealmValue.fromArray([ .int(1234)]) }
+        observeSetChange(obs, "otherAnyCol") { obj.anyCol.listValue?[0] = .float(123.456) }
+        observeSetChange(obs, "otherAnyCol") { obj.anyCol.listValue?.append(.bool(true)) }
+        observeSetChange(obs, "otherAnyCol") { obj.anyCol.listValue?.insert(.date(Date()), at: 1) }
+        observeSetChange(obs, "otherAnyCol") { obj.anyCol.listValue?.remove(at: 0) }
+    }
+
     func testReadSharedSchemaFromObservedObject() {
         let obj = ModernAllTypesObject()
         obj.addObserver(self, forKeyPath: "boolCol", options: [.old, .new], context: nil)

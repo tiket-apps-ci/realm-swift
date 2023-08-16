@@ -97,7 +97,7 @@ typedef NS_ENUM(NSUInteger, RLMSyncProgressMode) {
  `transferredBytes` refers to the number of bytes that have been uploaded or downloaded.
  `transferrableBytes` refers to the total number of bytes transferred, and pending transfer.
  */
-typedef void(^RLMProgressNotificationBlock)(NSUInteger transferredBytes, NSUInteger transferrableBytes);
+typedef void(^RLMProgressNotificationBlock)(NSUInteger transferredBytes, NSUInteger transferrableBytes, double c);
 
 RLM_HEADER_AUDIT_BEGIN(nullability, sendability)
 

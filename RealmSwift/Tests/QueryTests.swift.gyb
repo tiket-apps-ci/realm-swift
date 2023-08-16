@@ -469,6 +469,20 @@ class QueryTests: TestCase {
         % end
     }
 
+    func testEqualAnyRealmList() {
+        let object = objects()[0]
+        let list = List<AnyRealmValue>()
+        % for value in anyRealmValues:
+        list.append(${value.value(0)})
+        setAnyRealmValueCol(with: .list(list), object: object)
+        assertQuery("(anyCol == %@)", AnyRealmValue.list(list), count: 1) {
+            let list = List<AnyRealmValue>()
+            list.append(${value.value(0)})
+            return $0.anyCol == .list(list)
+        }
+        % end
+    }
+
     func testEqualObject() {
         let nestedObject = ModernAllTypesObject()
         let object = objects().first!

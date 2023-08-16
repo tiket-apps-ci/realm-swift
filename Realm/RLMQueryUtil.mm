@@ -1131,6 +1131,9 @@ void QueryBuilder::do_add_constraint(RLMPropertyType type, NSPredicateOperatorTy
                                      column.resolve<W<Mixed>>(),
                                      value);
             });
+        case RLMPropertyTypeDictionary:
+        case RLMPropertyTypeList:
+            break;
     }
 }
 
@@ -1500,6 +1503,9 @@ void QueryBuilder::add_collection_operation_constraint(NSPredicateOperatorType o
                 case RLMPropertyTypeObject:
                 case RLMPropertyTypeLinkingObjects:
                     return add_numeric_constraint(type, operatorType, column.resolve<Link>().count(), rhsValue);
+                case RLMPropertyTypeDictionary:
+                case RLMPropertyTypeList:
+                    break;
             }
         }
         case CollectionOperation::Minimum:

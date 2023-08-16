@@ -208,7 +208,7 @@ public typealias AsyncTransactionId = RLMAsyncTransactionId
          */
         public func addProgressNotification(queue: DispatchQueue = .main,
                                             block: @escaping (SyncSession.Progress) -> Void) {
-            rlmTask.addProgressNotification(on: queue) { transferred, transferrable in
+            rlmTask.addProgressNotification(on: queue) { transferred, transferrable, _ in
                 block(SyncSession.Progress(transferred: transferred, transferrable: transferrable))
             }
         }

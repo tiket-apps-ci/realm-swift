@@ -133,8 +133,11 @@ public:
 
     // Internal API
     RLMAccessorContext(RLMObjectBase *parentObject, const realm::Property *property = nullptr);
+    RLMAccessorContext(realm::Obj const& obj, RLMClassInfo& info);
     RLMAccessorContext(RLMObjectBase *parentObject, realm::ColKey);
     RLMAccessorContext(RLMClassInfo& info);
+    RLMAccessorContext(RLMClassInfo& parentInfo, RLMClassInfo& info);
+    RLMAccessorContext(RLMClassInfo& parentInfo, RLMClassInfo& info, __unsafe_unretained RLMProperty *const property);
 
     // The property currently being accessed; needed for KVO things for boxing
     // List and Results

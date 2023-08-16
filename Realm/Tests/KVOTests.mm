@@ -423,7 +423,7 @@ public:
     obj.objectArray = [NSMutableArray array];
     obj.uuidArray = [NSMutableArray array];
     obj.anyArray = [NSMutableArray array];
-
+    
     obj.boolSet = [NSMutableSet set];
     obj.intSet = [NSMutableSet set];
     obj.floatSet = [NSMutableSet set];
@@ -436,7 +436,7 @@ public:
     obj.objectSet = [NSMutableSet set];
     obj.uuidSet = [NSMutableSet set];
     obj.anySet = [NSMutableSet set];
-
+    
     obj.boolDictionary = [NSMutableDictionary dictionary];
     obj.intDictionary = [NSMutableDictionary dictionary];
     obj.floatDictionary = [NSMutableDictionary dictionary];
@@ -458,13 +458,13 @@ public:
     obj1.array = [NSMutableArray new];
     obj1.set = [NSMutableSet new];
     obj1.dictionary = [NSMutableDictionary new];
-
+    
     PlainLinkObject2 *obj2 = [PlainLinkObject2 new];
     obj2.obj = obj1;
     obj2.array = [NSMutableArray new];
     obj2.set = [NSMutableSet new];
     obj2.dictionary = [NSMutableDictionary new];
-
+    
     return obj2;
 }
 
@@ -472,13 +472,13 @@ public:
 
 - (void)testRegisterForUnknownProperty {
     KVOObject *obj = [self createObject];
-
+    
     XCTAssertNoThrow([obj addObserver:self forKeyPath:@"non-existent" options:0 context:nullptr]);
     XCTAssertNoThrow([obj removeObserver:self forKeyPath:@"non-existent"]);
-
+    
     XCTAssertNoThrow([obj addObserver:self forKeyPath:@"non-existent" options:NSKeyValueObservingOptionOld context:nullptr]);
     XCTAssertNoThrow([obj removeObserver:self forKeyPath:@"non-existent"]);
-
+    
     XCTAssertNoThrow([obj addObserver:self forKeyPath:@"non-existent" options:NSKeyValueObservingOptionPrior context:nullptr]);
     XCTAssertNoThrow([obj removeObserver:self forKeyPath:@"non-existent"]);
 }
@@ -491,14 +491,14 @@ public:
         return;
     }
 #endif
-
+    
     KVOObject *obj = [self createObject];
     XCTAssertThrowsSpecificNamed([obj removeObserver:self forKeyPath:@"int32Col"], NSException, NSRangeException);
     XCTAssertThrowsSpecificNamed([obj removeObserver:self forKeyPath:@"int32Col" context:nullptr], NSException, NSRangeException);
     XCTAssertNoThrow([obj addObserver:self forKeyPath:@"int32Col" options:0 context:nullptr]);
     XCTAssertNoThrow([obj removeObserver:self forKeyPath:@"int32Col"]);
     XCTAssertThrowsSpecificNamed([obj removeObserver:self forKeyPath:@"int32Col"], NSException, NSRangeException);
-
+    
     // `context` parameter must match if it's passed, but the overload that doesn't
     // take one will unregister any context
     void *context1 = (void *)1;
@@ -506,28 +506,28 @@ public:
     XCTAssertNoThrow([obj addObserver:self forKeyPath:@"int32Col" options:0 context:context1]);
     XCTAssertThrows([obj removeObserver:self forKeyPath:@"int32Col" context:context2]);
     XCTAssertNoThrow([obj removeObserver:self forKeyPath:@"int32Col" context:context1]);
-
+    
     XCTAssertNoThrow([obj addObserver:self forKeyPath:@"int32Col" options:0 context:context2]);
     XCTAssertNoThrow([obj removeObserver:self forKeyPath:@"int32Col" context:context2]);
-
+    
     XCTAssertNoThrow([obj addObserver:self forKeyPath:@"int32Col" options:0 context:context2]);
     XCTAssertNoThrow([obj removeObserver:self forKeyPath:@"int32Col"]);
     XCTAssertThrows([obj removeObserver:self forKeyPath:@"int32Col"]);
-
+    
     XCTAssertNoThrow([obj addObserver:self forKeyPath:@"int32Col" options:0 context:context1]);
     XCTAssertNoThrow([obj addObserver:self forKeyPath:@"int32Col" options:0 context:context2]);
     XCTAssertNoThrow([obj removeObserver:self forKeyPath:@"int32Col" context:context1]);
     XCTAssertThrows([obj removeObserver:self forKeyPath:@"int32Col" context:context1]);
     XCTAssertNoThrow([obj removeObserver:self forKeyPath:@"int32Col" context:context2]);
     XCTAssertThrows([obj removeObserver:self forKeyPath:@"int32Col" context:context2]);
-
+    
     XCTAssertNoThrow([obj addObserver:self forKeyPath:@"int32Col" options:0 context:context1]);
     XCTAssertNoThrow([obj addObserver:self forKeyPath:@"int32Col" options:0 context:context2]);
     XCTAssertNoThrow([obj removeObserver:self forKeyPath:@"int32Col" context:context2]);
     XCTAssertThrows([obj removeObserver:self forKeyPath:@"int32Col" context:context2]);
     XCTAssertNoThrow([obj removeObserver:self forKeyPath:@"int32Col" context:context1]);
     XCTAssertThrows([obj removeObserver:self forKeyPath:@"int32Col" context:context1]);
-
+    
     // no context version should only unregister one (unspecified) observer
     XCTAssertNoThrow([obj addObserver:self forKeyPath:@"int32Col" options:0 context:context1]);
     XCTAssertNoThrow([obj addObserver:self forKeyPath:@"int32Col" options:0 context:context2]);
@@ -538,14 +538,14 @@ public:
 
 - (void)testRemoveObserverInObservation {
     auto helper = [ReleaseOnObservation new];
-
+    
     __unsafe_unretained id obj;
     __weak id weakObj;
     @autoreleasepool {
         obj = weakObj = helper.object = [self createObject];
         [obj addObserver:helper forKeyPath:@"int32Col" options:NSKeyValueObservingOptionOld context:nullptr];
     }
-
+    
     [obj setInt32Col:0];
     XCTAssertNil(helper.object);
     XCTAssertNil(weakObj);
@@ -593,19 +593,19 @@ public:
         KVORecorder r16(self, obj, @"int16Col");
         KVORecorder r32(self, obj, @"int32Col");
         KVORecorder r64(self, obj, @"int64Col");
-
+        
         obj.int16Col = 2;
         AssertChanged(r16, @1, @2);
         XCTAssertTrue(r16.empty());
         XCTAssertTrue(r32.empty());
         XCTAssertTrue(r64.empty());
-
+        
         obj.int32Col = 2;
         AssertChanged(r32, @2, @2);
         XCTAssertTrue(r16.empty());
         XCTAssertTrue(r32.empty());
         XCTAssertTrue(r64.empty());
-
+        
         obj.int64Col = 2;
         AssertChanged(r64, @3, @2);
         XCTAssertTrue(r16.empty());
@@ -617,12 +617,12 @@ public:
 - (void)testMultipleChangesWithSingleObserver {
     KVOObject *obj = [self createObject];
     KVORecorder r(self, obj, @"int32Col");
-
+    
     obj.int32Col = 1;
     obj.int32Col = 2;
     obj.int32Col = 3;
     obj.int32Col = 3;
-
+    
     if (self.collapsesNotifications) {
         AssertChanged(r, @2, @3);
     }
@@ -637,21 +637,21 @@ public:
 - (void)testOnlyObserversForTheCorrectObjectAreNotified {
     KVOObject *obj1 = [self createObject];
     KVOObject *obj2 = [self createObject];
-
+    
     KVORecorder r1(self, obj1, @"int32Col");
     KVORecorder r2(self, obj2, @"int32Col");
-
+    
     obj1.int32Col = 10;
     AssertChanged(r1, @2, @10);
     XCTAssertEqual(0U, r2.size());
-
+    
     obj2.int32Col = 5;
     AssertChanged(r2, @2, @5);
 }
 
 - (void)testOptionsInitial {
     KVOObject *obj = [self createObject];
-
+    
     {
         KVORecorder r(self, obj, @"int32Col", 0);
         XCTAssertEqual(0U, r.size());
@@ -664,7 +664,7 @@ public:
 
 - (void)testOptionsOld {
     KVOObject *obj = [self createObject];
-
+    
     {
         KVORecorder r(self, obj, @"int32Col", 0);
         obj.int32Col = 0;
@@ -683,7 +683,7 @@ public:
 
 - (void)testOptionsNew {
     KVOObject *obj = [self createObject];
-
+    
     {
         KVORecorder r(self, obj, @"int32Col", 0);
         obj.int32Col = 0;
@@ -702,11 +702,11 @@ public:
 
 - (void)testOptionsPrior {
     KVOObject *obj = [self createObject];
-
+    
     KVORecorder r(self, obj, @"int32Col", NSKeyValueObservingOptionNew|NSKeyValueObservingOptionPrior);
     obj.int32Col = 0;
     r.refresh();
-
+    
     XCTAssertEqual(2U, r.size());
     if (NSDictionary *note = AssertNotification(r)) {
         XCTAssertNil(note[NSKeyValueChangeNewKey]);
@@ -720,49 +720,49 @@ public:
 
 - (void)testAllPropertyTypes {
     KVOObject *obj = [self createObject];
-
+    
     {
         KVORecorder r(self, obj, @"boolCol");
         obj.boolCol = YES;
         AssertChanged(r, @NO, @YES);
     }
-
+    
     {
         KVORecorder r(self, obj, @"int16Col");
         obj.int16Col = 0;
         AssertChanged(r, @1, @0);
     }
-
+    
     {
         KVORecorder r(self, obj, @"int32Col");
         obj.int32Col = 0;
         AssertChanged(r, @2, @0);
     }
-
+    
     {
         KVORecorder r(self, obj, @"int64Col");
         obj.int64Col = 0;
         AssertChanged(r, @3, @0);
     }
-
+    
     {
         KVORecorder r(self, obj, @"floatCol");
         obj.floatCol = 1.0f;
         AssertChanged(r, @0, @1);
     }
-
+    
     {
         KVORecorder r(self, obj, @"doubleCol");
         obj.doubleCol = 1.0;
         AssertChanged(r, @0, @1);
     }
-
+    
     {
         KVORecorder r(self, obj, @"cBoolCol");
         obj.cBoolCol = YES;
         AssertChanged(r, @NO, @YES);
     }
-
+    
     {
         KVORecorder r(self, obj, @"stringCol");
         obj.stringCol = @"abc";
@@ -770,7 +770,7 @@ public:
         obj.stringCol = nil;
         AssertChanged(r, @"abc", NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"binaryCol");
         NSData *data = [@"abc" dataUsingEncoding:NSUTF8StringEncoding];
@@ -779,7 +779,7 @@ public:
         obj.binaryCol = nil;
         AssertChanged(r, data, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"dateCol");
         NSDate *date = [NSDate dateWithTimeIntervalSinceReferenceDate:1];
@@ -788,7 +788,7 @@ public:
         obj.dateCol = nil;
         AssertChanged(r, date, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"objectIdCol");
         RLMObjectId *objectId = [RLMObjectId objectId];
@@ -797,7 +797,7 @@ public:
         obj.objectIdCol = nil;
         AssertChanged(r, objectId, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"decimal128Col");
         RLMDecimal128 *decimal128 = [[RLMDecimal128 alloc] initWithNumber:@1];
@@ -806,7 +806,7 @@ public:
         obj.decimal128Col = nil;
         AssertChanged(r, decimal128, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"objectCol");
         obj.objectCol = obj;
@@ -814,7 +814,7 @@ public:
         obj.objectCol = nil;
         AssertChanged(r, [self observableForObject:obj], NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"uuidCol");
         NSUUID *uuid = [NSUUID UUID];
@@ -823,7 +823,7 @@ public:
         obj.uuidCol = nil;
         AssertChanged(r, uuid, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"anyCol");
         obj.anyCol = @"abc";
@@ -838,77 +838,77 @@ public:
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"boolArray");
         obj.boolArray = obj.boolArray;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"floatArray");
         obj.floatArray = obj.floatArray;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"doubleArray");
         obj.doubleArray = obj.doubleArray;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"stringArray");
         obj.stringArray = obj.stringArray;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"dataArray");
         obj.dataArray = obj.dataArray;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"dateArray");
         obj.dateArray = obj.dateArray;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"objectIdArray");
         obj.objectIdArray = obj.objectIdArray;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"decimal128Array");
         obj.decimal128Array = obj.decimal128Array;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"objectArray");
         obj.objectArray = obj.objectArray;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"uuidArray");
         obj.uuidArray = obj.uuidArray;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"anyArray");
         obj.anyArray = obj.anyArray;
@@ -922,77 +922,77 @@ public:
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"boolSet");
         obj.boolSet = obj.boolSet;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"floatSet");
         obj.floatSet = obj.floatSet;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"doubleSet");
         obj.doubleSet = obj.doubleSet;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"stringSet");
         obj.stringSet = obj.stringSet;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"dataSet");
         obj.dataSet = obj.dataSet;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"dateSet");
         obj.dateSet = obj.dateSet;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"objectIdSet");
         obj.objectIdSet = obj.objectIdSet;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"decimal128Set");
         obj.decimal128Set = obj.decimal128Set;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"objectSet");
         obj.objectSet = obj.objectSet;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"uuidSet");
         obj.uuidSet = obj.uuidSet;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"anySet");
         obj.anySet = obj.anySet;
@@ -1006,84 +1006,84 @@ public:
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"boolDictionary");
         obj.boolDictionary = obj.boolDictionary;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"floatDictionary");
         obj.floatDictionary = obj.floatDictionary;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"doubleDictionary");
         obj.doubleDictionary = obj.doubleDictionary;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"stringDictionary");
         obj.stringDictionary = obj.stringDictionary;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"dataDictionary");
         obj.dataDictionary = obj.dataDictionary;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"dateDictionary");
         obj.dateDictionary = obj.dateDictionary;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"objectIdDictionary");
         obj.objectIdDictionary = obj.objectIdDictionary;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"decimal128Dictionary");
         obj.decimal128Dictionary = obj.decimal128Dictionary;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"objectDictionary");
         obj.objectDictionary = obj.objectDictionary;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"uuidDictionary");
         obj.uuidDictionary = obj.uuidDictionary;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"anyDictionary");
         obj.anyDictionary = obj.anyDictionary;
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"optIntCol");
         obj.optIntCol = @1;
@@ -1091,7 +1091,7 @@ public:
         obj.optIntCol = nil;
         AssertChanged(r, @1, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"optFloatCol");
         obj.optFloatCol = @1.1f;
@@ -1099,7 +1099,7 @@ public:
         obj.optFloatCol = nil;
         AssertChanged(r, @1.1f, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"optDoubleCol");
         obj.optDoubleCol = @1.1;
@@ -1107,7 +1107,7 @@ public:
         obj.optDoubleCol = nil;
         AssertChanged(r, @1.1, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"optBoolCol");
         obj.optBoolCol = @YES;
@@ -1119,49 +1119,49 @@ public:
 
 - (void)testAllPropertyTypesKVC {
     KVOObject *obj = [self createObject];
-
+    
     {
         KVORecorder r(self, obj, @"boolCol");
         [obj setValue:@YES forKey:@"boolCol"];
         AssertChanged(r, @NO, @YES);
     }
-
+    
     {
         KVORecorder r(self, obj, @"int16Col");
         [obj setValue:@0 forKey:@"int16Col"];
         AssertChanged(r, @1, @0);
     }
-
+    
     {
         KVORecorder r(self, obj, @"int32Col");
         [obj setValue:@0 forKey:@"int32Col"];
         AssertChanged(r, @2, @0);
     }
-
+    
     {
         KVORecorder r(self, obj, @"int64Col");
         [obj setValue:@0 forKey:@"int64Col"];
         AssertChanged(r, @3, @0);
     }
-
+    
     {
         KVORecorder r(self, obj, @"floatCol");
         [obj setValue:@1.0f forKey:@"floatCol"];
         AssertChanged(r, @0, @1);
     }
-
+    
     {
         KVORecorder r(self, obj, @"doubleCol");
         [obj setValue:@1.0 forKey:@"doubleCol"];
         AssertChanged(r, @0, @1);
     }
-
+    
     {
         KVORecorder r(self, obj, @"cBoolCol");
         [obj setValue:@YES forKey:@"cBoolCol"];
         AssertChanged(r, @NO, @YES);
     }
-
+    
     {
         KVORecorder r(self, obj, @"stringCol");
         [obj setValue:@"abc" forKey:@"stringCol"];
@@ -1169,7 +1169,7 @@ public:
         [obj setValue:nil forKey:@"stringCol"];
         AssertChanged(r, @"abc", NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"binaryCol");
         NSData *data = [@"abc" dataUsingEncoding:NSUTF8StringEncoding];
@@ -1178,7 +1178,7 @@ public:
         [obj setValue:nil forKey:@"binaryCol"];
         AssertChanged(r, data, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"dateCol");
         NSDate *date = [NSDate dateWithTimeIntervalSinceReferenceDate:1];
@@ -1187,7 +1187,7 @@ public:
         [obj setValue:nil forKey:@"dateCol"];
         AssertChanged(r, date, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"objectIdCol");
         RLMObjectId *objectId = [RLMObjectId objectId];
@@ -1196,7 +1196,7 @@ public:
         [obj setValue:nil forKey:@"objectIdCol"];
         AssertChanged(r, objectId, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"decimal128Col");
         RLMDecimal128 *decimal128 = [[RLMDecimal128 alloc] initWithNumber:@1];
@@ -1205,7 +1205,7 @@ public:
         [obj setValue:nil forKey:@"decimal128Col"];
         AssertChanged(r, decimal128, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"objectCol");
         [obj setValue:obj forKey:@"objectCol"];
@@ -1213,7 +1213,7 @@ public:
         [obj setValue:nil forKey:@"objectCol"];
         AssertChanged(r, [self observableForObject:obj], NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"uuidCol");
         NSUUID *uuid = [NSUUID UUID];
@@ -1222,14 +1222,14 @@ public:
         [obj setValue:nil forKey:@"uuidCol"];
         AssertChanged(r, uuid, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"objectArray");
         [obj setValue:obj.objectArray forKey:@"objectArray"];
         r.refresh();
         r.pop_front(); // asserts that there's something to pop
     }
-
+    
     {
         KVORecorder r(self, obj, @"optIntCol");
         [obj setValue:@1 forKey:@"optIntCol"];
@@ -1237,7 +1237,7 @@ public:
         [obj setValue:nil forKey:@"optIntCol"];
         AssertChanged(r, @1, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"optFloatCol");
         [obj setValue:@1.1f forKey:@"optFloatCol"];
@@ -1245,7 +1245,7 @@ public:
         [obj setValue:nil forKey:@"optFloatCol"];
         AssertChanged(r, @1.1f, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"optDoubleCol");
         [obj setValue:@1.1 forKey:@"optDoubleCol"];
@@ -1253,7 +1253,7 @@ public:
         [obj setValue:nil forKey:@"optDoubleCol"];
         AssertChanged(r, @1.1, NSNull.null);
     }
-
+    
     {
         KVORecorder r(self, obj, @"optBoolCol");
         [obj setValue:@YES forKey:@"optBoolCol"];
@@ -1706,6 +1706,64 @@ public:
     id mutator = [obj mutableArrayValueForKey:@"objectArray"];
     [mutator addObject:obj];
     AssertChanged(r, @0, @1);
+}
+
+- (void)testMixedCollectionKVC {
+    KVOObject *obj = [self createObject];
+    NSDictionary *d = @{ @"key2" : @"hello2",
+                          @"key3" : @YES,
+                          @"key4" : @123,
+                          @"key5" : @456.789 };
+
+    NSArray *a = @[ @"hello2", @YES, @123, @456.789 ];
+
+    {
+        KVORecorder r(self, obj, @"anyCol");
+        obj.anyCol = d;
+        AssertCollectionChanged();
+    }
+
+    {
+        KVORecorder r(self, obj, @"anyCol");
+        [obj setValue:d forKey:@"anyCol"];
+        AssertCollectionChanged();
+        [obj setValue:nil forKey:@"anyCol"];
+        AssertCollectionChanged();
+    }
+
+    {
+        KVORecorder r(self, obj, @"anyCol");
+        obj.anyCol = a;
+        AssertCollectionChanged();
+    }
+
+    {
+        KVORecorder r(self, obj, @"anyCol");
+        [obj setValue:a forKey:@"anyCol"];
+        AssertCollectionChanged();
+        [obj setValue:nil forKey:@"anyCol"];
+        AssertCollectionChanged();
+    }
+
+    if (![obj respondsToSelector:@selector(setObject:forKeyedSubscript:)]) {
+        return;
+    }
+
+    {
+        KVORecorder r(self, obj, @"anyCol");
+        obj[@"anyCol"] = d;
+        AssertCollectionChanged();
+        obj[@"anyCol"] = nil;
+        AssertCollectionChanged();
+    }
+
+    {
+        KVORecorder r(self, obj, @"anyCol");
+        obj[@"anyCol"] = a;
+        AssertCollectionChanged();
+        obj[@"anyCol"] = nil;
+        AssertCollectionChanged();
+    }
 }
 @end
 

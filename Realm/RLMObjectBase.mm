@@ -38,7 +38,7 @@
 #import <realm/object-store/object_schema.hpp>
 #import <realm/object-store/shared_realm.hpp>
 
-const NSUInteger RLMDescriptionMaxDepth = 5;
+const NSUInteger RLMDescriptionMaxDepth = 100;
 
 static bool isManagedAccessorClass(Class cls) {
     const char *className = class_getName(cls);
@@ -608,6 +608,7 @@ struct ObjectChangeCallbackWrapper {
         auto values = [NSMutableArray arrayWithCapacity:propertyNames.count];
         for (NSString *name in propertyNames) {
             id value = [object valueForKey:name];
+            // old values cannot be provided
             if (!value || [value isKindOfClass:[RLMArray class]]) {
                 [values addObject:NSNull.null];
             }

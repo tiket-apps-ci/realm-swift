@@ -31,7 +31,7 @@ typedef id<RLMValue> _Nullable(^RLMSectionedResultsKeyBlock)(id);
  A homogenous collection of Realm-managed objects. Examples of conforming types
  include `RLMArray`, `RLMSet`, `RLMResults`, and `RLMLinkingObjects`.
  */
-@protocol RLMCollection <NSFastEnumeration, RLMThreadConfined>
+@protocol RLMCollection <NSFastEnumeration, RLMThreadConfined, RLMValue>
 
 #pragma mark - Properties
 

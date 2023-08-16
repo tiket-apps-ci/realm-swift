@@ -986,6 +986,95 @@ class QueryTests: TestCase {
         }
     }
 
+    func testEqualAnyRealmList() {
+//        let object = objects()[0]
+//        let list = List<AnyRealmValue>()
+//        list.append(.none)
+//        setAnyRealmValueCol(with: .list(list), object: object)
+//        assertQuery("(anyCol == %@)", AnyRealmValue.list(list), count: 1) {
+//            let list = List<AnyRealmValue>()
+//            list.append(.none)
+//            return $0.anyCol == .list(list)
+//        }
+//        list.append(.int(123))
+//        setAnyRealmValueCol(with: .list(list), object: object)
+//        assertQuery("(anyCol == %@)", AnyRealmValue.list(list), count: 1) {
+//            let list = List<AnyRealmValue>()
+//            list.append(.int(123))
+//            return $0.anyCol == .list(list)
+//        }
+//        list.append(.bool(true))
+//        setAnyRealmValueCol(with: .list(list), object: object)
+//        assertQuery("(anyCol == %@)", AnyRealmValue.list(list), count: 1) {
+//            let list = List<AnyRealmValue>()
+//            list.append(.bool(true))
+//            return $0.anyCol == .list(list)
+//        }
+//        list.append(.float(123.456))
+//        setAnyRealmValueCol(with: .list(list), object: object)
+//        assertQuery("(anyCol == %@)", AnyRealmValue.list(list), count: 1) {
+//            let list = List<AnyRealmValue>()
+//            list.append(.float(123.456))
+//            return $0.anyCol == .list(list)
+//        }
+//        list.append(.double(123.456))
+//        setAnyRealmValueCol(with: .list(list), object: object)
+//        assertQuery("(anyCol == %@)", AnyRealmValue.list(list), count: 1) {
+//            let list = List<AnyRealmValue>()
+//            list.append(.double(123.456))
+//            return $0.anyCol == .list(list)
+//        }
+//        list.append(.string("FooBar"))
+//        setAnyRealmValueCol(with: .list(list), object: object)
+//        assertQuery("(anyCol == %@)", AnyRealmValue.list(list), count: 1) {
+//            let list = List<AnyRealmValue>()
+//            list.append(.string("FooBar"))
+//            return $0.anyCol == .list(list)
+//        }
+//        list.append(.data(Data(count: 64)))
+//        setAnyRealmValueCol(with: .list(list), object: object)
+//        assertQuery("(anyCol == %@)", AnyRealmValue.list(list), count: 1) {
+//            let list = List<AnyRealmValue>()
+//            list.append(.data(Data(count: 64)))
+//            return $0.anyCol == .list(list)
+//        }
+//        list.append(.date(Date(timeIntervalSince1970: 1000000)))
+//        setAnyRealmValueCol(with: .list(list), object: object)
+//        assertQuery("(anyCol == %@)", AnyRealmValue.list(list), count: 1) {
+//            let list = List<AnyRealmValue>()
+//            list.append(.date(Date(timeIntervalSince1970: 1000000)))
+//            return $0.anyCol == .list(list)
+//        }
+//        list.append(.object(circleObject))
+//        setAnyRealmValueCol(with: .list(list), object: object)
+//        assertQuery("(anyCol == %@)", AnyRealmValue.list(list), count: 1) {
+//            let list = List<AnyRealmValue>()
+//            list.append(.object(circleObject))
+//            return $0.anyCol == .list(list)
+//        }
+//        list.append(.objectId(ObjectId("61184062c1d8f096a3695046")))
+//        setAnyRealmValueCol(with: .list(list), object: object)
+//        assertQuery("(anyCol == %@)", AnyRealmValue.list(list), count: 1) {
+//            let list = List<AnyRealmValue>()
+//            list.append(.objectId(ObjectId("61184062c1d8f096a3695046")))
+//            return $0.anyCol == .list(list)
+//        }
+//        list.append(.decimal128(123.456))
+//        setAnyRealmValueCol(with: .list(list), object: object)
+//        assertQuery("(anyCol == %@)", AnyRealmValue.list(list), count: 1) {
+//            let list = List<AnyRealmValue>()
+//            list.append(.decimal128(123.456))
+//            return $0.anyCol == .list(list)
+//        }
+//        list.append(.uuid(UUID(uuidString: "33041937-05b2-464a-98ad-3910cbe0d09e")!))
+//        setAnyRealmValueCol(with: .list(list), object: object)
+//        assertQuery("(anyCol == %@)", AnyRealmValue.list(list), count: 1) {
+//            let list = List<AnyRealmValue>()
+//            list.append(.uuid(UUID(uuidString: "33041937-05b2-464a-98ad-3910cbe0d09e")!))
+//            return $0.anyCol == .list(list)
+//        }
+    }
+
     func testEqualObject() {
         let nestedObject = ModernAllTypesObject()
         let object = objects().first!
