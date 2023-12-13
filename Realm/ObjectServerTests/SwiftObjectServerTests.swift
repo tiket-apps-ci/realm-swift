@@ -3515,6 +3515,54 @@ class AsyncAwaitObjectServerTests: SwiftSyncTestCase {
             checkCount(expected: 1, realm, SwiftTypesSyncObject.self)
         }
     }
+    
+    func testSchemagen() async throws {
+        let appId = try RealmServer.shared.createAppWithQueryableFields(["age"])
+        let schema = try RealmServer.shared.fetchSchema(appId: appId)
+
+        let fm = FileManager.default
+        let tmp = NSTemporaryDirectory()
+        try fm.removeItem(atPath: "\(tmp)/realm_test_pkg")
+        try fm.createDirectory(atPath: "\(tmp)/realm_test_pkg/Sources/RealmTestPkg", 
+                               withIntermediateDirectories: true)
+        
+        try """
+        // swift-tools-version: 5.9
+        import PackageDescription
+        import Foundation
+        
+        let package = Package(
+            name: "Test",
+            products: [
+                .executable(name: "RealmTestPkg", targets: ["RealmTestPkg"])
+            ],
+            dependencies: [
+                .package(url: "https://github.com/realm/realm-swift.git", branch: "master")
+            ],
+            targets: [
+                .executableTarget(name: "RealmTestPkg",
+                                  dependencies: [.product(name: "RealmSwift", package: "realm-swift")])
+            ]
+        )
+        """.write(toFile: "\(tmp)/realm_test_pkg/Package.swift",
+                  atomically: true,
+                  encoding: .utf8)
+        
+        try """
+        \(schema.joined(separator: "\n"))
+        import RealmSwift
+        import Foundation
+        
+        _ = try Realm()
+        """.write(toFile: "\(tmp)/realm_test_pkg/Sources/RealmTestPkg/main.swift",
+                  atomically: true,
+                  encoding: .utf8)
+        print(schema)
+        
+        try RealmServer.shared.shell("""
+        swift run --package-path \(tmp)/realm_test_pkg/
+        """)
+    }
 }
 
 #endif // os(macOS)

@@ -1,4 +1,4 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.9
 
 import PackageDescription
 import Foundation
@@ -86,11 +86,13 @@ func objectServerTestSupportTarget(name: String, dependencies: [Target.Dependenc
 func objectServerTestTarget(name: String, sources: [String]) -> Target {
     .testTarget(
         name: name,
-        dependencies: ["RealmSwift", "RealmTestSupport", "RealmSyncTestSupport", "RealmSwiftSyncTestSupport"],
+        dependencies: ["RealmSwift", "RealmTestSupport", "RealmSyncTestSupport", "RealmSwiftSyncTestSupport", "SetupBaas"],
         path: "Realm/ObjectServerTests",
         exclude: objectServerTestSources.filter { !sources.contains($0) },
         sources: sources,
+        resources: [.copy("Realm/ObjectServerTests/Resources")],
         cxxSettings: testCxxSettings
+//        plugins: [.plugin(name: "BaasPlugin")]
     )
 }
 
@@ -124,13 +126,57 @@ func runCommand() -> String {
     }
     return matches.last ?? ""
 }
+//var pluginWorkDirectory = CommandLine.arguments[1]
+//var isDirectory = ObjCBool(false)
+//if FileManager.default.fileExists(atPath: pluginWorkDirectory,
+//                                  isDirectory: &isDirectory), !isDirectory.boolValue {
+//    pluginWorkDirectory = FileManager.default.currentDirectoryPath
+//}
+//var BASE_DIR = pluginWorkDirectory
+// var BUILD_DIR = "\(BASE_DIR)/.baas"
+// var BIN_DIR = "\(BUILD_DIR)/bin"
+// var LIB_DIR = "\(BUILD_DIR)/lib"
+// var PID_FILE = "\(BUILD_DIR)/pid.txt"
+//
+// var MONGO_EXE = "'\(BIN_DIR)'/mongo"
+// var MONGOD_EXE = "'\(BIN_DIR)'/mongod"
+//
+// var DEPENDENCIES = try! String(data: Data(contentsOf: URL(filePath: "\(BASE_DIR)/dependencies.list")), encoding: .utf8)!
+//    .split(separator: "\n")
+//    .map {
+//        $0.split(separator: "=").map(String.init)
+//    }.reduce(into: [String: String](), {
+//        $0[$1[0]] = $1[1]
+//    })
+//
+// var MONGODB_VERSION = "5.0.6"
+// var GO_VERSION = "1.19.5"
+// var NODE_VERSION = "16.13.1"
+// var STITCH_VERSION = DEPENDENCIES["STITCH_VERSION"]
+//
+// var MONGODB_URL = "https://fastdl.mongodb.org/osx/mongodb-macos-x86_64-\(MONGODB_VERSION).tgz"
+//let TRANSPILER_TARGET = "node16-macos"
+//let SERVER_STITCH_LIB_URL = "https://s3.amazonaws.com/stitch-artifacts/stitch-support/stitch-support-macos-debug-4.3.2-721-ge791a2e-patch-5e2a6ad2a4cf473ae2e67b09.tgz"
+//let STITCH_SUPPORT_URL="https://static.realm.io/downloads/swift/stitch-support.tar.xz"
+//let MONGO_DIR="\(BUILD_DIR)/mongodb-macos-x86_64-#{MONGODB_VERSION}"
+//
+//if !FileManager.default.fileExists(atPath: BUILD_DIR) {
+//    try FileManager.default.createDirectory(atPath: BUILD_DIR,
+//                                            withIntermediateDirectories: false)
+//    try FileManager.default.createDirectory(atPath: BIN_DIR,
+//                                            withIntermediateDirectories: false)
+//    try FileManager.default.createDirectory(atPath: LIB_DIR,
+//                                            withIntermediateDirectories: false)
+//}
+//let (url, response) = try await URLSession(configuration: .default)
+//    .download(from: URL(string: MONGODB_URL)!)
 
 let package = Package(
     name: "Realm",
     platforms: [
         .macOS(.v10_13),
-        .iOS(.v11),
-        .tvOS(.v11),
+        .iOS(.v12),
+        .tvOS(.v12),
         .watchOS(.v4)
     ],
     products: [
@@ -316,7 +362,15 @@ let package = Package(
                 "TestUtils.swift"
             ]
         ),
-
+      .target(name: "SetupBaas",
+              path: "scripts/baas"),
+      .plugin(name: "BaasPlugin",
+              capability: .command(intent: .custom(verb: "build-ads", description: "Builds ADS Server"),
+                                   permissions: [.writeToPackageDirectory(reason: "Server resources"),
+                                                 .allowNetworkConnections(scope: .all(),
+                                                                          reason: "Download Server resources")]),
+//              dependencies: ["SetupBaas"],
+              path: "scripts/plugins"),
         // Object server tests have support code written in both obj-c and
         // Swift which is used by both the obj-c and swift test code. SPM
         // doesn't support mixed targets, so this ends up requiring four

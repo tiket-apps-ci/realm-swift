@@ -24,6 +24,8 @@ import XCTest
 #if canImport(RealmSwiftTestSupport)
 import RealmSwiftTestSupport
 import RealmSyncTestSupport
+import SetupBaas
+import Network
 #endif
 
 #if os(macOS)
@@ -198,7 +200,7 @@ struct AdminProfile: Codable {
             case groupId = "group_id"
         }
 
-        let groupId: String
+        let groupId: String?
     }
 
     let roles: [Role]
@@ -250,15 +252,22 @@ class AdminSession {
         subscript(dynamicMember member: String) -> AdminEndpoint {
             let pattern = "([a-z0-9])([A-Z])"
 
-            let regex = try? NSRegularExpression(pattern: pattern, options: [])
-            let range = NSRange(location: 0, length: member.count)
-            let snakeCaseMember = regex?.stringByReplacingMatches(in: member,
-                                                                  options: [],
-                                                                  range: range,
-                                                                  withTemplate: "$1_$2").lowercased()
+            let snakeCaseMember: String
+//            let range = member[member.startIndex..<member.index(after: at)]
+
+            if member.reduce(into: true, { $0 = $0 && $1.isUppercase }) {
+                snakeCaseMember = member
+            } else {
+                let regex = try? NSRegularExpression(pattern: pattern, options: [])
+                let range = NSRange(location: 0, length: member.count)
+                snakeCaseMember = (regex?.stringByReplacingMatches(in: member,
+                                                                   options: [],
+                                                                   range: range,
+                                                                   withTemplate: "$1_$2").lowercased())!
+            }
             return AdminEndpoint(accessToken: accessToken,
                                  groupId: groupId,
-                                 url: url.appendingPathComponent(snakeCaseMember!))
+                                 url: url.appendingPathComponent(snakeCaseMember))
         }
 
         /**
@@ -455,7 +464,7 @@ class Admin {
             }
             .flatMap { (accessToken: String) -> Result<AdminSession, Error> in
                 self.userProfile(accessToken: accessToken).map {
-                    AdminSession(accessToken: accessToken, groupId: $0.roles[0].groupId)
+                    AdminSession(accessToken: accessToken, groupId: $0.roles[0].groupId!)
                 }
             }
             .get()
@@ -517,6 +526,38 @@ public class RealmServer: NSObject {
         return FileManager.default.fileExists(atPath: goDir.path)
     }
 
+    @discardableResult // Add to suppress warnings when you don't want/need a result
+    public func shell(_ command: String, environment: [String : String] = [:]) throws -> (output: String, terminationStatus: Int32) {
+        let task = Process()
+        let pipe = Pipe()
+        pipe.fileHandleForReading.readabilityHandler = {
+            guard let str = String(data: $0.availableData, encoding: .utf8), !str.isEmpty else {
+                return
+            }
+            print(str)
+        }
+        if !environment.isEmpty {
+            task.environment = environment
+        }
+        task.standardOutput = pipe
+        task.standardError = pipe
+        task.arguments = ["-c", command]
+        task.executableURL = URL(fileURLWithPath: "/bin/zsh") //<--updated
+        task.standardInput = nil
+
+        try task.run()
+        task.waitUntilExit() //<--updated
+        
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        let output = String(data: data, encoding: .utf8)!
+        print("SHELL: \(output)")
+        if task.terminationStatus != 0 {
+            enum Error : Swift.Error { case error(_ message: String) }
+            throw Error.error(output)
+        }
+        return (output, task.terminationStatus)
+    }
+    
     private override init() {
         super.init()
 
@@ -526,6 +567,16 @@ public class RealmServer: NSObject {
             }
 
             do {
+                let semaphore = DispatchSemaphore(value: 0)
+                if #available(macOS 13.0, *) {
+                    Task {
+                        try? await ADSPlugin.build(in: String(Self.rootUrl.absoluteString.dropLast()))
+                        semaphore.signal()
+                    }
+                } else {
+                    // Fallback on earlier versions
+                }
+                semaphore.wait()
                 try launchMongoProcess()
                 try launchServerProcess()
                 self.session = try Admin().login()
@@ -609,7 +660,7 @@ public class RealmServer: NSObject {
             "AWS_SECRET_ACCESS_KEY": awsSecretAccessKey
         ]
 
-        let stitchRoot = RealmServer.buildDir.path + "/go/src/github.com/10gen/stitch"
+        let stitchRoot = RealmServer.buildDir.path + "/go/src/github.com/10gen/baas"
 
         for _ in 0..<5 {
             // create the admin user
@@ -642,8 +693,10 @@ public class RealmServer: NSObject {
         serverProcess.arguments = [
             "--configFile",
             "\(stitchRoot)/etc/configs/test_config.json",
-            "--configFile",
-            "\(RealmServer.rootUrl)/Realm/ObjectServerTests/config_overrides.json"
+//            "--configFile",
+            
+//            Bundle.module.path(forResource: "config_overrides", ofType: "json")!
+//            "\(RealmServer.rootUrl)/Realm/ObjectServerTests/config_overrides.json"
         ]
 
         let pipe = Pipe()
@@ -748,6 +801,14 @@ public class RealmServer: NSObject {
 
     public typealias AppId = String
 
+    public func fetchSchema(appId: AppId) throws -> [String] {
+        let session = try XCTUnwrap(session)
+        let app = try session.apps[retrieveAppServerId(appId)]
+        let json = try app.sync.clientSchemas.SWIFT.get().get()
+        let schema = json as! [[String: Any]]
+        return schema.map({ $0["schema"] as! String })
+    }
+    
     /// Create a new server app
     /// This will create a App with different configuration depending on the SyncMode (partition based sync or flexible sync), partition type is used only in case
     /// this is partition based sync, and will crash if one is not provided in that mode
