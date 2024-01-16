@@ -136,5 +136,6 @@ module Workflows
     Target.new('cocoapods-watchos', 'CI', latest_only, Destination.generic),
     Target.new('cocoapods-tvos', 'CI', latest_only, Destination.generic),
     Target.new('cocoapods-catalyst', 'CI', latest_only, Destination.generic),
+    Target.new('cocoapods-visionos', 'CI', latest_only, Destination.generic),
   ]
 end

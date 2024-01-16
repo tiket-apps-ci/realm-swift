@@ -7,6 +7,8 @@ x.y.z Release notes (yyyy-MM-dd)
   improves app startup time a little, and eliminates some warnings when linking
   the framework. This was already the case when using Carthage or a prebuilt
   framework ([PR #8464](https://github.com/realm/realm-swift/pull/8464)).
+* Add support for visionOS when installing via CocoaPods. This requires bumping
+  the minimum version of CocoaPods to 1.13.
 
 ### Fixed
 * `@Persisted`'s Encodable implementation did not allow the encoder to
@@ -22,7 +24,7 @@ x.y.z Release notes (yyyy-MM-dd)
 * Realm Studio: 14.0.1 or later.
 * APIs are backwards compatible with all previous releases in the 10.x.y series.
 * Carthage release for Swift is built with Xcode 15.2.0.
-* CocoaPods: 1.10 or later.
+* CocoaPods: 1.13 or later.
 * Xcode: 14.2-15.2.0.
 
 ### Internal
