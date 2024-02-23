@@ -684,32 +684,26 @@ Query make_diacritic_insensitive_constraint(NSPredicateOperatorType operatorType
     }
 }
 
+template <typename> struct AlwaysFalseT : std::false_type {};
 template <typename C, typename T>
-void QueryBuilder::do_add_diacritic_sensitive_string_constraint(NSPredicateOperatorType operatorType,
-                                                                NSComparisonPredicateOptions predicateOptions,
-                                                                C&& column, T&& value) {
-    bool caseSensitive = !(predicateOptions & NSCaseInsensitivePredicateOption);
+Query make_diacritic_sensitive_constraint(NSPredicateOperatorType operatorType,
+                                          bool caseSensitive, C& column, T const& value)
+{
     switch (operatorType) {
         case NSBeginsWithPredicateOperatorType:
-            add_substring_constraint(value, column.begins_with(value, caseSensitive));
-            break;
+            return column.begins_with(value, caseSensitive);
         case NSEndsWithPredicateOperatorType:
-            add_substring_constraint(value, column.ends_with(value, caseSensitive));
-            break;
+            return column.ends_with(value, caseSensitive);
         case NSContainsPredicateOperatorType:
-            add_substring_constraint(value, column.contains(value, caseSensitive));
-            break;
+            return column.contains(value, caseSensitive);
         case NSEqualToPredicateOperatorType:
-            m_query.and_query(column.equal(value, caseSensitive));
-            break;
+            return column.equal(value, caseSensitive);
         case NSNotEqualToPredicateOperatorType:
-            m_query.and_query(column.not_equal(value, caseSensitive));
-            break;
+            return column.not_equal(value, caseSensitive);
         case NSLikePredicateOperatorType:
-            m_query.and_query(column.like(value, caseSensitive));
-            break;
+            return column.like(value, caseSensitive);
         default: {
-            if constexpr (is_any_v<C, Columns<String>, Columns<Lst<String>>, Columns<Set<String>>>) {
+            if constexpr (is_any_v<C, Columns<String>, Columns<Lst<String>>, Columns<Set<String>>, ColumnDictionaryKeys>) {
                 unsupportedOperator(RLMPropertyTypeString, operatorType);
             }
             else if constexpr (is_any_v<C, Columns<Binary>, Columns<Lst<Binary>>, Columns<Set<Binary>>>) {
@@ -726,7 +720,54 @@ void QueryBuilder::do_add_diacritic_sensitive_string_constraint(NSPredicateOpera
                                @"Operator '%@' not supported for string queries on Dictionary.",
                                operatorName(operatorType));
             }
+            else {
+                static_assert(AlwaysFalseT<C>::value);
+            }
         }
+    }
+}
+
+template <typename C, typename T>
+void QueryBuilder::do_add_diacritic_sensitive_string_constraint(NSPredicateOperatorType operatorType,
+                                                                NSComparisonPredicateOptions predicateOptions,
+                                                                C&& column, T&& value) {
+    bool caseSensitive = !(predicateOptions & NSCaseInsensitivePredicateOption);
+    Query condition = make_diacritic_sensitive_constraint(operatorType, caseSensitive, column, value);
+    if constexpr (is_any_v<C, Columns<Mixed>, Columns<Lst<Mixed>>, Columns<Set<Mixed>>, Columns<Dictionary>>) {
+        Mixed m = value;
+        if (!m.is_null()) {
+            if (m.get_type() == type_String) {
+                m = m.export_to_type<BinaryData>();
+            }
+            else {
+                m = m.export_to_type<StringData>();
+            }
+
+            switch (operatorType) {
+                case NSBeginsWithPredicateOperatorType:
+                case NSEndsWithPredicateOperatorType:
+                case NSContainsPredicateOperatorType:
+                case NSEqualToPredicateOperatorType:
+                case NSLikePredicateOperatorType:
+                    condition.Or();
+                    [[fallthrough]];
+
+                default:
+                    condition.and_query(make_diacritic_sensitive_constraint(operatorType, caseSensitive, column, m));
+                    break;
+            }
+        }
+    }
+    switch (operatorType) {
+        case NSBeginsWithPredicateOperatorType:
+        case NSEndsWithPredicateOperatorType:
+        case NSContainsPredicateOperatorType:
+            add_substring_constraint(value, std::move(condition));
+            break;
+
+        default:
+            m_query.and_query(std::move(condition));
+            break;
     }
 }
 
@@ -1660,7 +1701,7 @@ void QueryBuilder::apply_map_expression(RLMObjectSchema *objectSchema, NSExpress
     ColumnReference collectionColumn = column_reference_from_key_path(key_path_from_string(m_schema, objectSchema, keyPath), true);
     RLMPrecondition(collectionColumn.property().dictionary, @"Invalid predicate",
                     @"Invalid keypath '%@': only dictionaries support subscript predicates.", functionExpression);
-    add_mixed_constraint(operatorType, options, collectionColumn.resolve<Dictionary>().key(mapKey.UTF8String), right.constantValue);
+    add_mixed_constraint(operatorType, options, std::move(collectionColumn.resolve<Dictionary>().key(mapKey.UTF8String)), right.constantValue);
 }
 
 void QueryBuilder::apply_function_expression(RLMObjectSchema *objectSchema, NSExpression *functionExpression,
