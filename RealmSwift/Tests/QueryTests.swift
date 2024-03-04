@@ -1412,7 +1412,37 @@ class QueryTests: TestCase {
         validateNumericComparisons("optDecimal", \Query<AllCustomPersistableTypes>.optDecimal, nil, count: 0)
     }
 
-    func testGreaterThanAnyRealmValue() {
+    func validateStringComparisons<Root: Object, T: _Persistable>(
+            _ name: String, _ lhs: (Query<Root>) -> Query<T>,
+            _ value: T, letCount: Int = 1, getCount: Int = 1, ltCount: Int = 0, gtCount: Int = 0) where T.PersistedType: _QueryString {
+        assertQuery(Root.self, "(\(name) > %@)", value, count: gtCount) {
+            lhs($0) > value
+        }
+        assertQuery(Root.self, "(\(name) >= %@)", value, count: getCount) {
+            lhs($0) >= value
+        }
+        assertQuery(Root.self, "(\(name) < %@)", value, count: ltCount) {
+            lhs($0) < value
+        }
+        assertQuery(Root.self, "(\(name) <= %@)", value, count: letCount) {
+            lhs($0) <= value
+        }
+    }
+
+    func testStringComparisons() {
+        validateStringComparisons("stringCol", \Query<ModernAllTypesObject>.stringCol, "Foó")
+        validateStringComparisons("stringEnumCol", \Query<ModernAllTypesObject>.stringEnumCol, .value2)
+        validateStringComparisons("string", \Query<AllCustomPersistableTypes>.string, StringWrapper(persistedValue: "Foó"))
+        validateStringComparisons("optStringCol", \Query<ModernAllTypesObject>.optStringCol, "Foó")
+        validateStringComparisons("optStringEnumCol", \Query<ModernAllTypesObject>.optStringEnumCol, .value2)
+        validateStringComparisons("optString", \Query<AllCustomPersistableTypes>.optString, StringWrapper(persistedValue: "Foó"))
+
+        validateStringComparisons("optStringCol", \Query<ModernAllTypesObject>.optStringCol, nil, letCount: 0, gtCount: 1)
+        validateStringComparisons("optStringEnumCol", \Query<ModernAllTypesObject>.optStringEnumCol, nil, letCount: 0, gtCount: 1)
+        validateStringComparisons("optString", \Query<AllCustomPersistableTypes>.optString, nil, letCount: 0, gtCount: 1)
+    }
+
+    func testGreaterThanNumericAnyRealmValue() {
         let object = objects()[0]
         setAnyRealmValueCol(with: .int(123), object: object)
         assertQuery("(anyCol > %@)", AnyRealmValue.int(123), count: 0) {
@@ -1451,7 +1481,18 @@ class QueryTests: TestCase {
         }
     }
 
-    func testLessThanAnyRealmValue() {
+    func testGreaterThanStringAnyRealmValue() {
+        let object = objects()[0]
+        setAnyRealmValueCol(with: .string("FooBar"), object: object)
+        assertQuery("(anyCol > %@)", AnyRealmValue.string("FooBar"), count: 0) {
+            $0.anyCol > .string("FooBar")
+        }
+        assertQuery("(anyCol >= %@)", AnyRealmValue.string("FooBar"), count: 1) {
+            $0.anyCol >= .string("FooBar")
+        }
+    }
+
+    func testLessThanNumericAnyRealmValue() {
         let object = objects()[0]
         setAnyRealmValueCol(with: .int(123), object: object)
         assertQuery("(anyCol < %@)", AnyRealmValue.int(123), count: 0) {
@@ -1487,6 +1528,17 @@ class QueryTests: TestCase {
         }
         assertQuery("(anyCol <= %@)", AnyRealmValue.decimal128(123.456), count: 1) {
             $0.anyCol <= .decimal128(123.456)
+        }
+    }
+
+    func testLessThanStringAnyRealmValue() {
+        let object = objects()[0]
+        setAnyRealmValueCol(with: .string("FooBar"), object: object)
+        assertQuery("(anyCol < %@)", AnyRealmValue.string("FooBar"), count: 0) {
+            $0.anyCol < .string("FooBar")
+        }
+        assertQuery("(anyCol <= %@)", AnyRealmValue.string("FooBar"), count: 1) {
+            $0.anyCol <= .string("FooBar")
         }
     }
 
@@ -1675,6 +1727,57 @@ class QueryTests: TestCase {
                            likeStrings.map { (String?.some($0.0), $0.1, $0.2) }, canMatch: false)
         validateStringLike("optString", \Query<AllCustomPersistableTypes>.optString,
                            likeStrings.map { (StringWrapper(persistedValue: $0.0), $0.1, $0.2) }, canMatch: true)
+    }
+
+    private func validateStringLexicographicalComparision<Root: Object, T: _Persistable>(
+        _ name: String, _ lhs: (Query<Root>) -> Query<T>, _ strings: [(T, Int, Int, Int, Int, Bool)], canMatch: Bool) where T.PersistedType: _QueryString {
+        for (str, gtCount, getCount, ltCount, letCount, caseSensitive) in strings {
+            assertQuery(Root.self, "(\(name) > %@)", str, count: (canMatch || caseSensitive) ? gtCount : 1) {
+                lhs($0) > str
+            }
+            assertQuery(Root.self, "(\(name) >= %@)", str, count: (canMatch || caseSensitive) ? getCount : 1) {
+                lhs($0) >= str
+            }
+            assertQuery(Root.self, "(\(name) < %@)", str, count: (canMatch || caseSensitive) ? ltCount : 0) {
+                lhs($0) < str
+            }
+            assertQuery(Root.self, "(\(name) <= %@)", str, count: (canMatch || caseSensitive) ? letCount : 0) {
+                lhs($0) <= str
+            }
+        }
+    }
+
+    func testLexicographicalComparision() {
+        let likeStrings: [(String, Int, Int, Int, Int, Bool)] = [
+            ("Foó", 0, 1, 0, 1, false),
+            ("f*", 0, 0, 1, 1, true),
+            ("*ó", 1, 1, 0, 0, false),
+            ("f?ó", 0, 0, 1, 1, true),
+            ("f*ó", 0, 0, 1, 1, true),
+            ("f??ó", 0, 0, 1, 1, true),
+            ("*o*", 1, 1, 0, 0, false),
+            ("*O*", 1, 1, 0, 0, false),
+            ("?o?", 1, 1, 0, 0, false),
+            ("?O?", 1, 1, 0, 0, false),
+            ("Foô", 0, 0, 1, 1, false),
+            ("Fpó", 0, 0, 1, 1, false),
+            ("Goó", 0, 0, 1, 1, false),
+            ("Foò", 1, 1, 0, 0, false),
+            ("Fnó", 1, 1, 0, 0, false),
+            ("Eoó", 1, 1, 0, 0, false),
+        ]
+        validateStringLexicographicalComparision("stringCol", \Query<ModernAllTypesObject>.stringCol,
+                           likeStrings.map { ($0.0, $0.1, $0.2, $0.3, $0.4, $0.5) }, canMatch: true)
+        validateStringLexicographicalComparision("stringEnumCol", \Query<ModernAllTypesObject>.stringEnumCol.rawValue,
+                                                 likeStrings.map { ($0.0, $0.1, $0.2, $0.3, $0.4, $0.5) }, canMatch: false)
+        validateStringLexicographicalComparision("string", \Query<AllCustomPersistableTypes>.string,
+                           likeStrings.map { (StringWrapper(persistedValue: $0.0), $0.1, $0.2, $0.3, $0.4, $0.5) }, canMatch: true)
+        validateStringLexicographicalComparision("optStringCol", \Query<ModernAllTypesObject>.optStringCol,
+                           likeStrings.map { (String?.some($0.0), $0.1, $0.2, $0.3, $0.4, $0.5) }, canMatch: true)
+        validateStringLexicographicalComparision("optStringEnumCol", \Query<ModernAllTypesObject>.optStringEnumCol.rawValue,
+                           likeStrings.map { (String?.some($0.0), $0.1, $0.2, $0.3, $0.4, $0.5) }, canMatch: false)
+        validateStringLexicographicalComparision("optString", \Query<AllCustomPersistableTypes>.optString,
+                           likeStrings.map { (StringWrapper(persistedValue: $0.0), $0.1, $0.2, $0.3, $0.4, $0.5) }, canMatch: true)
     }
 
     // MARK: - Data
@@ -8706,6 +8809,38 @@ class QueryTests: TestCase {
 
         assertQuery("(stringEnumCol != stringEnumCol)", count: 0) {
             $0.stringEnumCol != $0.stringEnumCol
+        }
+
+        assertQuery("(stringEnumCol > stringEnumCol)", count: 0) {
+            $0.stringEnumCol > $0.stringEnumCol
+        }
+
+        assertQuery("(stringCol > stringCol)", count: 0) {
+            $0.stringCol > $0.stringCol
+        }
+
+        assertQuery("(stringEnumCol >= stringEnumCol)", count: 1) {
+            $0.stringEnumCol >= $0.stringEnumCol
+        }
+
+        assertQuery("(stringCol >= stringCol)", count: 1) {
+            $0.stringCol >= $0.stringCol
+        }
+
+        assertQuery("(stringEnumCol < stringEnumCol)", count: 0) {
+            $0.stringEnumCol < $0.stringEnumCol
+        }
+
+        assertQuery("(stringCol < stringCol)", count: 0) {
+            $0.stringCol < $0.stringCol
+        }
+
+        assertQuery("(stringEnumCol <= stringEnumCol)", count: 1) {
+            $0.stringEnumCol <= $0.stringEnumCol
+        }
+
+        assertQuery("(stringCol <= stringCol)", count: 1) {
+            $0.stringCol <= $0.stringCol
         }
 
         assertThrows(assertQuery("", count: 1) {

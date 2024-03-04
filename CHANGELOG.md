@@ -11,6 +11,9 @@ unless you have large Sets of AnyRealmValue, String, or Data.
   properties so that the individual values will take up 0 bits (if all nulls),
   32 bits, 64 bits or 128 bits depending on what is needed.
   ([Core #6111](https://github.com/realm/realm-core/pull/6111))
+* Added support for string comparison queries, which allows building string 
+  queries with the following operators (`>`, `>=`, `<`, `<=`). 
+  ([#8008](https://github.com/realm/realm-swift/issues/8008)).
 
 ### Fixed
 * Sorting on binary Data was done by comparing bytes as signed char rather than
