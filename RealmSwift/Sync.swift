@@ -847,9 +847,12 @@ public extension SyncSession {
      A struct encapsulating progress information.
      */
     struct Progress: Sendable {
+        private let _transferredBytes: Int // NEXT-MAJOR remove storage fields and deprecated props
+        private let _transferrableBytes: Int // NEXT-MAJOR remove storage fields and deprecated props
+
         /// The number of bytes that have been transferred.
         @available(*, deprecated, message: "Use progressEstimate")
-        public let transferredBytes: Int
+        public var transferredBytes: Int { return _transferredBytes }
 
         /**
          The total number of transferrable bytes (bytes that have been transferred,
@@ -861,7 +864,7 @@ public extension SyncSession {
          changesets representing the local changes on this client.
          */
         @available(*, deprecated, message: "Use progressEstimate")
-        public let transferrableBytes: Int
+        public var transferrableBytes: Int { return _transferrableBytes }
 
         /**
          A value between 0.0 and 1.0 representing the estimated transfer progress. This value is precise for
@@ -888,8 +891,8 @@ public extension SyncSession {
         }
 
         internal init(transferred: UInt, transferrable: UInt, estimate: Double) {
-            transferredBytes = Int(transferred)
-            transferrableBytes = Int(transferrable)
+            _transferredBytes = Int(transferred)
+            _transferrableBytes = Int(transferrable)
             progressEstimate = estimate
         }
     }
@@ -928,9 +931,9 @@ public extension SyncSession {
                                  mode: ProgressMode,
                                  block: @Sendable @escaping (Progress) -> Void) -> ProgressNotificationToken? {
         return __addSyncProgressNotification(for: (direction == .upload ? .upload : .download),
-                                         mode: (mode == .reportIndefinitely
-                                            ? .reportIndefinitely
-                                            : .forCurrentlyOutstandingWork)) { progress in
+                                             mode: (mode == .reportIndefinitely
+                                                    ? .reportIndefinitely
+                                                    : .forCurrentlyOutstandingWork)) { progress in
             block(Progress(transferred: progress.transferredBytes, transferrable: progress.transferrableBytes, estimate: progress.progressEstimate))
         }
     }
