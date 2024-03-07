@@ -1,11 +1,11 @@
 x.y.z Release notes (yyyy-MM-dd)
 =============================================================
 ### Enhancements
-* None.
+* Lifted a limitation that would prevent declaring a model with only computed properties. ([#8414](https://github.com/realm/realm-swift/issues/8414))
 
 ### Fixed
 * <How to hit and notice issue? what was the impact?> ([#????](https://github.com/realm/realm-swift/issues/????), since v?.?.?)
-* None.
+* Fix multiple arguments support via the `REALM_EXTRA_BUILD_ARGUMENTS` environment variable in `build.sh`. ([PR #8413](https://github.com/realm/realm-swift/pulls/8413)). Thanks, [@hisaac](https://github.com/hisaac)!
 
 <!-- ### Breaking Changes - ONLY INCLUDE FOR NEW MAJOR version -->
 
