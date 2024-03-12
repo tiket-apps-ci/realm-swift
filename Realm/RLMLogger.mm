@@ -75,7 +75,7 @@ static NSString* levelPrefix(Level logLevel) {
 }
 
 struct CocoaLogger : public Logger {
-    void do_log(Level level, const std::string& message) override {
+    void do_log(const realm::util::LogCategory&, Level level, const std::string& message) override {
         NSLog(@"%@: %@", levelPrefix(level), RLMStringDataToNSString(message));
     }
 };
@@ -83,7 +83,7 @@ struct CocoaLogger : public Logger {
 class CustomLogger : public Logger {
 public:
     RLMLoggerFunction function;
-    void do_log(Level level, const std::string& message) override {
+    void do_log(const realm::util::LogCategory&, Level level, const std::string& message) override {
         @autoreleasepool {
             if (function) {
                 function(logLevelForLevel(level), RLMStringDataToNSString(message));
@@ -120,10 +120,23 @@ typedef void(^LoggerBlock)(RLMLogLevel level, NSString *message);
     return self;
 }
 
-- (instancetype)initWithLevel:(RLMLogLevel)level logFunction:(RLMLogFunction)logFunction {
+- (instancetype)initWithLevel:(RLMLogLevel)level
+                  logFunction:(RLMLogFunction)logFunction {
     if (self = [super init]) {
         auto logger = std::make_shared<CustomLogger>();
         logger->set_level_threshold(levelForLogLevel(level));
+        logger->function = logFunction;
+        self->_logger = logger;
+    }
+    return self;
+}
+
+- (instancetype)initWithLevel:(RLMLogLevel)level
+                     category:(NSString *)category
+                  logFunction:(RLMLogFunction)logFunction {
+    if (self = [super init]) {
+        auto logger = std::make_shared<CustomLogger>();
+        logger->set_level_threshold(std::string(category.UTF8String), levelForLogLevel(level));
         logger->function = logFunction;
         self->_logger = logger;
     }
@@ -145,6 +158,11 @@ typedef void(^LoggerBlock)(RLMLogLevel level, NSString *message);
     if (_logger->would_log(level)) {
         _logger->log(level, "%1", message.UTF8String);
     }
+}
+
+- (void)setLogLevel:(RLMLogLevel)level category:(NSString *)category {
+    RLMLogger *defaultLogger = [RLMLogger defaultLogger];
+    defaultLogger->_logger->set_level_threshold(std::string(category.UTF8String), levelForLogLevel(level));
 }
 
 #pragma mark Global Logger Setter

@@ -53,7 +53,7 @@ typedef RLM_CLOSED_ENUM(NSUInteger, RLMLogLevel) {
 /// The log function may be called from multiple threads simultaneously, and is
 /// responsible for performing its own synchronization if any is required.
 RLM_SWIFT_SENDABLE // invoked on a background thread
-typedef void (^RLMLogFunction)(RLMLogLevel level, NSString *message);
+typedef void (^RLMLogFunction)(RLMLogLevel level, NSString *category, NSString *message);
 
 /**
  `RLMLogger` is used for creating your own custom logging logic.
@@ -85,7 +85,12 @@ typedef void (^RLMLogFunction)(RLMLogLevel level, NSString *message);
  @param level The log level to be set for the logger.
  @param logFunction The log function which will be invoked whenever there is a log message.
 */
-- (instancetype)initWithLevel:(RLMLogLevel)level logFunction:(RLMLogFunction)logFunction;
+- (instancetype)initWithLevel:(RLMLogLevel)level logFunction:(RLMLogFunction)logFunction
+__attribute__((deprecated("")));
+
+- (instancetype)initWithLevel:(RLMLogLevel)level
+                     category:(NSString *)category
+                  logFunction:(RLMLogFunction)logFunction;
 
 #pragma mark RLMLogger Default Logger API
 
@@ -93,6 +98,8 @@ typedef void (^RLMLogFunction)(RLMLogLevel level, NSString *message);
  The current default logger. When setting a logger as default, this logger will be used whenever information must be logged.
  */
 @property (class) RLMLogger *defaultLogger NS_SWIFT_NAME(shared);
+
+- (void)setLogLevel:(RLMLogLevel)level category:(NSString *)category;
 
 @end
 

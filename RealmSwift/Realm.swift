@@ -1553,4 +1553,87 @@ extension Logger {
     internal func log(level: LogLevel, message: String) {
         self.logLevel(level, message: message)
     }
+
+    public convenience init(level: LogLevel, category: LogCategory = Category.All, function: @escaping ((LogLevel, String, String) -> Void)) {
+        self.init(level: level, category: category.value, logFunction: function)
+    }
+
+    public func setLogLevel(_ level: LogLevel, category: LogCategory = Category.All) {
+        Logger.shared.setLogLevel(level, category: category.value)
+    }
+}
+
+//public struct LogCategory {
+//    public var all: String = ""
+//    public var sdk: String = ""
+//    public var app: String = ""
+//    public var storage: Storage = Storage()
+//
+//    public struct Storage {
+//        public var transaction: String = ""
+//    }
+//
+//    private init() {
+//
+//    }
+//}
+
+
+public protocol LogCategory {
+    var value: String { get }
+}
+public enum Category: String, LogCategory {
+    case All
+    case SDK
+    case App
+
+    private var parent: String {
+        return "Realm"
+    }
+
+    public var value: String {
+        return self.rawValue
+    }
+
+    public enum Storage: String, LogCategory {
+        case Transaction
+        case Query
+        case Object
+        case Notification
+
+        private var parent: String {
+            return "Realm.Storage"
+        }
+
+        public var value: String {
+            return parent + "." + self.rawValue
+        }
+    }
+
+    public enum Sync: String, LogCategory {
+        case Server
+
+        private var parent: String {
+            return "Realm.Sync"
+        }
+
+        public var value: String {
+            return parent + "." + self.rawValue
+        }
+
+        public enum Client: String, LogCategory {
+            case Session
+            case Changeset
+            case Network
+            case Reset
+
+            private var parent: String {
+                return "Realm.Sync.Client"
+            }
+
+            public var value: String {
+                return parent + "." + self.rawValue
+            }
+        }
+    }
 }
