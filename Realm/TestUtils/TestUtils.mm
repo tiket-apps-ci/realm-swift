@@ -212,7 +212,7 @@ RLMUser *RLMDummyUser() {
     @autoreleasepool {
         realm::SyncFileManager sfm(config.rootDirectory.path.UTF8String, "dummy");
         std::optional<std::vector<char>> encryption_key;
-        realm::SyncMetadataManager metadata_manager(sfm.metadata_path(), false);
+        realm::SyncMetadataManager metadata_manager(sfm.metadata_path(), {}, "dummy");
         auto user = metadata_manager.get_or_make_user_metadata("dummy", "https://example.invalid");
         auto token = fakeJWT();
         user->set_access_token(token);
