@@ -1047,7 +1047,7 @@ case "$COMMAND" in
         new_version="$2"
         old_version="$(sed -n 's/^REALM_CORE_VERSION=\(.*\)$/\1/p' "${source_root}/dependencies.list")"
 
-        sed -i '' "s/^REALM_CORE_VERSION=.*/REALM_CORE_VERSION=$new_version/" dependencies.list
+        sed -i '' "s/^REALM_CORE_VERSION=.*/REALM_CORE_VERSION=v$new_version/" dependencies.list
         sed -i '' "s/^let coreVersion =.*/let coreVersion = Version(\"$new_version\")/" Package.swift
         sed -i '' "s/Upgraded realm-core from ? to ?/Upgraded realm-core from $old_version to $new_version/" CHANGELOG.md
 
@@ -1343,9 +1343,9 @@ x.y.z Release notes (yyyy-MM-dd)
 ### Compatibility
 * Realm Studio: 14.0.1 or later.
 * APIs are backwards compatible with all previous releases in the 10.x.y series.
-* Carthage release for Swift is built with Xcode 15.2.0.
+* Carthage release for Swift is built with Xcode 15.3.0.
 * CocoaPods: 1.10 or later.
-* Xcode: 14.2-15.2.0.
+* Xcode: 14.2-15.3.0.
 
 ### Internal
 * Upgraded realm-core from ? to ?

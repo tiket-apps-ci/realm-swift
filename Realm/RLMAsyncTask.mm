@@ -41,14 +41,13 @@ static NSError *s_canceledError = [NSError errorWithDomain:NSPOSIXErrorDomain
     NSLocalizedDescriptionKey: @"Operation canceled"
 }];
 
-typedef void(^CoreSyncProgressNotificationBlock)(NSUInteger transferred_bytes, NSUInteger transferrable_bytes, double estimate);
+typedef void(^CoreProgressNotificationBlock)(NSUInteger transferredBytes, NSUInteger transferrableBytes, double estimate);
 
 __attribute__((objc_direct_members))
 @implementation RLMAsyncOpenTask {
     RLMUnfairMutex _mutex;
     std::shared_ptr<realm::AsyncOpenTask> _task;
-
-    std::vector<CoreSyncProgressNotificationBlock> _progressBlocks;
+    std::vector<CoreProgressNotificationBlock> _progressBlocks;
     bool _cancel;
 
     RLMRealmConfiguration *_configuration;

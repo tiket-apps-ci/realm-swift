@@ -1,23 +1,159 @@
 x.y.z Release notes (yyyy-MM-dd)
 =============================================================
 ### Enhancements
-* Lifted a limitation that would prevent declaring a model with only computed properties. ([#8414](https://github.com/realm/realm-swift/issues/8414))
+* The default base url in `AppConfiguration` has been updated to point to `services.cloud.mongodb.com`. See https://www.mongodb.com/docs/atlas/app-services/domain-migration/ for more information. ([#8512](https://github.com/realm/realm-swift/issues/8512))
 
 ### Fixed
 * <How to hit and notice issue? what was the impact?> ([#????](https://github.com/realm/realm-swift/issues/????), since v?.?.?)
-* Fix multiple arguments support via the `REALM_EXTRA_BUILD_ARGUMENTS` environment variable in `build.sh`. ([PR #8413](https://github.com/realm/realm-swift/pulls/8413)). Thanks, [@hisaac](https://github.com/hisaac)!
+* Fixed a crash that would occur when an http error 401 or 403 is returned upon
+  opening a watch stream for a MongoDB collection. ([#8519](https://github.com/realm/realm-swift/issues/8519))
+* Fix an assertion failure "m_lock_info && m_lock_info->m_file.get_path() == m_filename" that appears to be related to opening a Realm while the file is in the process of being closed on another thread. ([#8507](https://github.com/realm/realm-swift/issues/8507))
+* Fixed diverging history due to a bug in the replication code when setting default null values (embedded objects included). ([Core #7536](https://github.com/realm/realm-core/issues/7536))
+* Null pointer exception may be triggered when logging out and async commits callbacks not executed. ([Core #7434](https://github.com/realm/realm-core/issues/7434))
+* `AppConfiguration.baseUrl` will now return the default value of the url when not set rather than `nil`. ([#8512](https://github.com/realm/realm-swift/issues/8512))
 
 <!-- ### Breaking Changes - ONLY INCLUDE FOR NEW MAJOR version -->
 
 ### Compatibility
 * Realm Studio: 14.0.1 or later.
 * APIs are backwards compatible with all previous releases in the 10.x.y series.
-* Carthage release for Swift is built with Xcode 15.2.0.
+* Carthage release for Swift is built with Xcode 15.3.0.
 * CocoaPods: 1.10 or later.
-* Xcode: 14.2-15.2.0.
+* Xcode: 14.2-15.3.0.
 
 ### Internal
-* Upgraded realm-core from ? to ?
+* Upgraded realm-core from 14.4.1 to 14.5.0
+
+10.49.1 Release notes (2024-03-22)
+=============================================================
+
+### Enhancements
+
+* Improve file compaction performance on arm64 platforms for encrypted files
+  between 16kB and 4MB in size. ([PR #7492](https://github.com/realm/realm-core/pull/7492)).
+
+### Fixed
+
+* Opening a Realm with a cached user while offline would fail to retry some
+  steps of the connection process and instead report a fatal error.
+  ([#7349](https://github.com/realm/realm-core/issues/7349), since v10.46.0)
+
+### Compatibility
+
+* Realm Studio: 15.0.0 or later.
+* APIs are backwards compatible with all previous releases in the 10.x.y series.
+* Carthage release for Swift is built with Xcode 15.3.0.
+* CocoaPods: 1.10 or later.
+* Xcode: 14.2-15.3.0.
+
+### Internal
+
+* Upgraded realm-core from v14.3.0 to 14.4.1
+
+10.49.0 Release notes (2024-03-22)
+=============================================================
+
+This version introduces a new Realm file format version (v24). Opening existing
+Realm files will automatically upgrade the files, making them unable to be
+opened by older versions. This upgrade process should typically be very fast
+unless you have large Sets of AnyRealmValue, String, or Data, which have to be rewritten.
+
+A backup will automatically be created next to the Realm before performing the
+upgrade. Downgrading to older versions of Realm will attempt to automatically
+restore the backup, or it will be deleted after three months.
+
+### Enhancements
+
+* Storage of Decimal128 properties has been optimised similarly to Int
+  properties so that the individual values will take up 0 bits (if all nulls),
+  32 bits, 64 bits or 128 bits depending on what is needed.
+  ([Core #6111](https://github.com/realm/realm-core/pull/6111))
+
+### Fixed
+
+* Sorting on binary Data was done by comparing bytes as signed char rather than
+  unsigned char, resulting in very strange orders (since sorting on Data was
+  enabled in v6.0.4)
+* Sorting on AnyRealmValue did not use a valid total ordering, and certain
+  combinations of values could result in values not being sorted or potentially
+  even crashes. The resolution for this will result in some previously-valid
+  combinations of values of different types being sorted in different orders
+  than previously (since the introduction of AnyRealmValue in 10.8.0).
+* RLMSet/MutableSet was inconsistent about if it considered a String and a Data
+  containing the utf-8 encoded bytes of that String to be equivalent. They are
+  now always considered distinct. (since the introduction of sets in v10.8.0).
+* Equality queries on a Mixed property with an index could sometimes return
+  incorrect results if values of different types happened to have the same hash
+  code. ([Core 6407](https://github.com/realm/realm-core/issues/6407) since v10.8.0).
+* Creating more than 8388606 links pointing to a single object would crash.
+  ([Core #6577](https://github.com/realm/realm-core/issues/6577), since v5.0.0)
+* A Realm generated on a non-apple ARM 64 device and copied to another platform
+  (and vice-versa) were non-portable due to a sorting order difference. This
+  impacts strings or binaries that have their first difference at a non-ascii
+  character. These items may not be found in a set, or in an indexed column if
+  the strings had a long common prefix (> 200 characters).
+  ([Core #6670](https://github.com/realm/realm-core/pull/6670), since 2.0.0 for indexes, and since since the introduction of sets in v10.8.0)
+* Fix a spurious crash related to opening a Realm on background thread while
+  the process was in the middle of exiting ([Core #7420](https://github.com/realm/realm-core/pull/7420)).
+
+### Breaking Changes
+
+* Drop support for opening pre-v5.0.0 Realm files.
+
+### Compatibility
+
+* Realm Studio: 15.0.0 or later.
+* APIs are backwards compatible with all previous releases in the 10.x.y series.
+* Carthage release for Swift is built with Xcode 15.3.0.
+* CocoaPods: 1.10 or later.
+* Xcode: 14.2-15.3.0. Note that we will be dropping support for Xcode 14 when
+  Apple begins requiring Xcode 15 for app store submissions on April 29.
+
+### Internal
+
+* Upgraded realm-core from 13.26.0 to 14.3.0
+
+10.48.1 Release notes (2024-03-15)
+=============================================================
+
+### Fixed
+
+* The Realm.framework privacy manifest was missing
+  NSPrivacyAccessedAPICategoryDiskSpace, but we check free disk space before
+  attempting to automatically back up Realm files (since 10.46.0).
+
+### Compatibility
+
+* Realm Studio: 14.0.1 or later.
+* APIs are backwards compatible with all previous releases in the 10.x.y series.
+* Carthage release for Swift is built with Xcode 15.3.0.
+* CocoaPods: 1.10 or later.
+* Xcode: 14.2-15.3.0.
+
+10.48.0 Release notes (2024-03-07)
+=============================================================
+
+### Enhancements
+
+* Lifted a limitation that would prevent declaring a model with only computed
+  properties. ([#8414](https://github.com/realm/realm-swift/issues/8414))
+* Add Xcode 15.3 to the release package ([PR #8502](https://github.com/realm/realm-swift/pull/8502)).
+
+### Fixed
+
+* Fix multiple arguments support via the `REALM_EXTRA_BUILD_ARGUMENTS`
+  environment variable in `build.sh`. ([PR #8413](https://github.com/realm/realm-swift/pulls/8413)).
+  Thanks, [@hisaac](https://github.com/hisaac)!
+* Fix some of the new sendability warnings introduced in Xcode 15.3
+  ([PR #8502](https://github.com/realm/realm-swift/pull/8502)).
+
+### Compatibility
+
+* Realm Studio: 14.0.1 or later.
+* APIs are backwards compatible with all previous releases in the 10.x.y series.
+* Carthage release for Swift is built with Xcode 15.3.0.
+* CocoaPods: 1.10 or later.
+* Xcode: 14.2-15.3.0.
 
 10.47.0 Release notes (2024-02-12)
 =============================================================
