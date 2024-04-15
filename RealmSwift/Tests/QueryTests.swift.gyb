@@ -470,15 +470,33 @@ class QueryTests: TestCase {
     }
 
     func testEqualAnyRealmList() {
+        let circleObject = self.circleObject
         let object = objects()[0]
         let list = List<AnyRealmValue>()
         % for value in anyRealmValues:
+        list.removeAll()
         list.append(${value.value(0)})
         setAnyRealmValueCol(with: .list(list), object: object)
         assertQuery("(anyCol == %@)", AnyRealmValue.list(list), count: 1) {
             let list = List<AnyRealmValue>()
             list.append(${value.value(0)})
             return $0.anyCol == .list(list)
+        }
+        % end
+    }
+
+    func testEqualAnyRealmDictionary() {
+        let circleObject = self.circleObject
+        let object = objects()[0]
+        let dictionary = Map<String, AnyRealmValue>()
+        % for value in anyRealmValues:
+        dictionary.removeAll()
+        dictionary["key"] = AnyRealmValue${value.value(0)}
+        setAnyRealmValueCol(with: .dictionary(dictionary), object: object)
+        assertQuery("(anyCol == %@)", AnyRealmValue.dictionary(dictionary), count: 1) {
+            let dictionary = Map<String, AnyRealmValue>()
+            dictionary["key"] = AnyRealmValue${value.value(0)}
+            return $0.anyCol == .dictionary(dictionary)
         }
         % end
     }

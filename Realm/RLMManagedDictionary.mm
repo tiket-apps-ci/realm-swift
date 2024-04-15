@@ -254,10 +254,10 @@ static NSMutableArray *resultsToArray(RLMClassInfo& info, realm::Results r) {
         RLMAccessorContext context(*_objectInfo);
         if (auto value = _backingCollection.try_get_any(context.unbox<realm::StringData>(key))) {
             if (value->is_type(realm::type_Dictionary)) {
-                return [[RLMManagedDictionary alloc] initWithBackingCollection:_backingCollection.get_dictionary(context.unbox<realm::StringData>(key)) parentInfo:_objectInfo property:_property];
+                return [[RLMManagedDictionary alloc] initWithBackingCollection:_backingCollection.get_dictionary(context.unbox<realm::StringData>(key)) parentInfo:_ownerInfo property:_property];
             }
             else if (value->is_type(realm::type_List)) {
-                return [[RLMManagedArray alloc] initWithBackingCollection:_backingCollection.get_list(context.unbox<realm::StringData>(key)) parentInfo:_objectInfo property:_property];
+                return [[RLMManagedArray alloc] initWithBackingCollection:_backingCollection.get_list(context.unbox<realm::StringData>(key)) parentInfo:_ownerInfo property:_property];
             }
             else {
                 return context.box(*value);

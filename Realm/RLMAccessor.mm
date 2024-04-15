@@ -841,6 +841,14 @@ RLMAccessorContext::RLMAccessorContext(realm::Obj const& obj, RLMClassInfo& info
 {
 }
 
+RLMAccessorContext::RLMAccessorContext(RLMClassInfo& parentInfo, RLMClassInfo& info, realm::ColKey key)
+: _realm(info.realm)
+, _info(info)
+, _parentObjectInfo(&parentInfo)
+, _colKey(key)
+{
+}
+
 RLMAccessorContext::RLMAccessorContext(RLMClassInfo& info)
 : _realm(info.realm), _info(info)
 {

@@ -629,9 +629,6 @@ class AnyRealmValueCollectionTests: TestCase {
 
         // Results
         let result = realm.objects(AnyRealmTypeObject.self).last
-
-        // Results assert
-        // This is failing, fix in core
         XCTAssertNotNil(result)
         assertArray1(result!)
     }
@@ -689,7 +686,7 @@ class AnyRealmValueCollectionTests: TestCase {
         assertMixed(o)
 
         try! realm.write {
-            let d = ["key0": [["key5": [["key4": [["key3": [["key2": [[[AnyRealmValue.object(so)], ["key1": [AnyRealmValue.object(so)]]]]]]]]]]]]]
+            let d = ["key0": ["key5": [["key4": [["key3": [["key2": [[AnyRealmValue.object(so)], ["key1": [AnyRealmValue.object(so)]]]]]]]]]]]
             let object = realm.create(AnyRealmTypeObject.self, value: [ "anyValue" : d])
             assertMixed(object)
         }
@@ -1077,47 +1074,47 @@ class AnyRealmValueMutableSetTests<O: ObjectFactory, V: AnyValueFactory>: AnyRea
         }
     }
 
-//    func testValueForKey() {
-//        XCTAssertEqual(mutableSet.value(forKey: "self").count, 0)
-//        mutableSet.insert(values[0])
-//        let kvc = (mutableSet.value(forKey: "self") as [AnyObject]).first!
-//        switch values[0] {
-//        case let .object(o):
-//            if let obj = kvc as? SwiftStringObject {
-//                XCTAssertEqual(obj.stringCol, (o as! SwiftStringObject).stringCol)
-//            } else {
-//                XCTFail("not an object")
-//            }
-//        case let .bool(b):
-//            XCTAssertEqual(kvc as! Bool, b)
-//        case let .data(d):
-//            XCTAssertEqual(kvc as! Data, d)
-//        case let .date(d):
-//            XCTAssertEqual(kvc as! Date, d)
-//        case let .decimal128(d):
-//            XCTAssertEqual(kvc as! Decimal128, d)
-//        case let .double(d):
-//            XCTAssertEqual(kvc as! Double, d)
-//        case let .float(f):
-//            XCTAssertEqual(kvc as! Float, f)
-//        case let .int(i):
-//            XCTAssertEqual(kvc as! Int, i)
-//        case .none:
-//            XCTAssertNil(kvc)
-//        case let .objectId(o):
-//            XCTAssertEqual(kvc as! ObjectId, o)
-//        case let .string(s):
-//            XCTAssertEqual(kvc as! String, s)
-//        case let .uuid(u):
-//            XCTAssertEqual(kvc as! UUID, u)
-//        case let .dictionary(d):
-//            XCTAssertEqual(kvc as! Map<String, AnyRealmValue>, d)
-//        case let .list(l):
-//            XCTAssertEqual(kvc as! List<AnyRealmValue>, l)
-//        }
-//
-//        assertThrows(mutableSet.value(forKey: "not self"), named: "NSUnknownKeyException")
-//    }
+    func testValueForKey() {
+        XCTAssertEqual(mutableSet.value(forKey: "self").count, 0)
+        mutableSet.insert(values[0])
+        let kvc = (mutableSet.value(forKey: "self") as [AnyObject]).first!
+        switch values[0] {
+        case let .object(o):
+            if let obj = kvc as? SwiftStringObject {
+                XCTAssertEqual(obj.stringCol, (o as! SwiftStringObject).stringCol)
+            } else {
+                XCTFail("not an object")
+            }
+        case let .bool(b):
+            XCTAssertEqual(kvc as! Bool, b)
+        case let .data(d):
+            XCTAssertEqual(kvc as! Data, d)
+        case let .date(d):
+            XCTAssertEqual(kvc as! Date, d)
+        case let .decimal128(d):
+            XCTAssertEqual(kvc as! Decimal128, d)
+        case let .double(d):
+            XCTAssertEqual(kvc as! Double, d)
+        case let .float(f):
+            XCTAssertEqual(kvc as! Float, f)
+        case let .int(i):
+            XCTAssertEqual(kvc as! Int, i)
+        case .none:
+            XCTAssertNil(kvc)
+        case let .objectId(o):
+            XCTAssertEqual(kvc as! ObjectId, o)
+        case let .string(s):
+            XCTAssertEqual(kvc as! String, s)
+        case let .uuid(u):
+            XCTAssertEqual(kvc as! UUID, u)
+        case let .dictionary(d):
+            XCTAssertEqual(kvc as! Map<String, AnyRealmValue>, d)
+        case let .list(l):
+            XCTAssertEqual(kvc as! List<AnyRealmValue>, l)
+        }
+
+        assertThrows(mutableSet.value(forKey: "not self"), named: "NSUnknownKeyException")
+    }
 
     func testInsert() {
         XCTAssertEqual(Int(0), mutableSet.count)

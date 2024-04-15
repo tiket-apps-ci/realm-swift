@@ -20,6 +20,7 @@
 
 #import "RLMAccessor.hpp"
 #import "RLMCollection_Private.hpp"
+#import "RLMDictionary_Private.hpp"
 #import "RLMObjectSchema_Private.hpp"
 #import "RLMObjectStore.h"
 #import "RLMObject_Private.hpp"
@@ -202,10 +203,10 @@ static void changeArray(__unsafe_unretained RLMManagedArray *const ar, NSKeyValu
     return translateErrors([&]() -> id {
         realm::Mixed mixed = _backingList.get_any(index);
         if (mixed.is_type(realm::type_Dictionary)) {
-            return [[RLMManagedArray alloc] initWithBackingCollection:_backingList.get_list(index) parentInfo:_objectInfo property:_property];
+            return [[RLMManagedDictionary alloc] initWithBackingCollection:_backingList.get_dictionary(index) parentInfo:_ownerInfo property:_property];
         }
         else if (mixed.is_type(realm::type_List)) {
-            return [[RLMManagedArray alloc] initWithBackingCollection:_backingList.get_list(index) parentInfo:_objectInfo property:_property];
+            return [[RLMManagedArray alloc] initWithBackingCollection:_backingList.get_list(index) parentInfo:_ownerInfo property:_property];
         }
         else {
             RLMAccessorContext context(*_ownerInfo, *_objectInfo);
@@ -513,7 +514,7 @@ static void RLMInsertObject(RLMManagedArray *ar, id object, NSUInteger index) {
 - (instancetype)resolveInRealm:(RLMRealm *)realm {
     auto& parentInfo = _ownerInfo->resolve(realm);
     return translateErrors([&] {
-        return [[self.class alloc] initWithBackingCollection:_backingList.freeze(realm->_realm)
+        return [[RLMManagedArray alloc] initWithBackingCollection:_backingList.freeze(realm->_realm)
                                                   parentInfo:&parentInfo
                                                     property:parentInfo.rlmObjectSchema[_property.name]];
     });

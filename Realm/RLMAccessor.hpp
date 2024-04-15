@@ -134,6 +134,7 @@ public:
     // Internal API
     RLMAccessorContext(RLMObjectBase *parentObject, const realm::Property *property = nullptr);
     RLMAccessorContext(realm::Obj const& obj, RLMClassInfo& info);
+    RLMAccessorContext(RLMClassInfo& parentInfo, RLMClassInfo& info, realm::ColKey key);
     RLMAccessorContext(RLMObjectBase *parentObject, realm::ColKey);
     RLMAccessorContext(RLMClassInfo& info);
     RLMAccessorContext(RLMClassInfo& parentInfo, RLMClassInfo& info);

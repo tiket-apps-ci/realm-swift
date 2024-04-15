@@ -146,7 +146,7 @@ static const int RLMEnumerationBufferSize = 16;
     NSUInteger batchCount = 0, count = state->extra[1];
 
     @autoreleasepool {
-        RLMAccessorContext ctx(*_info);
+        RLMAccessorContext ctx(*_info, *_info, _results->get_collection()->get_col_key());
         for (NSUInteger index = state->state; index < count && batchCount < len; ++index) {
             _strongBuffer[batchCount] = _results->get(ctx, index);
             batchCount++;
